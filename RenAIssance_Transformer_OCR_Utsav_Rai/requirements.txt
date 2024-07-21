@@ -1,0 +1,10 @@
+pandas
+torch
+transformers
+Pillow
+opencv-python
+pytesseract
+pdf2image
+datasets
+python-Levenshtein
+glob2
