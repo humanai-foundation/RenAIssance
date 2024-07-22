@@ -6,8 +6,8 @@ from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
-model_path = "model/trocr_finetuned_printed_optuna"
-processor_path = "model/trocr_finetuned_printed_optuna"
+model_path = "../../weights/trocr_finetuned_printed_optuna"
+processor_path = "../../wights/trocr_finetuned_printed_optuna"
 
 # Load the fine-tuned model and processor
 processor = TrOCRProcessor.from_pretrained(processor_path)
@@ -22,7 +22,7 @@ def generate_text_from_image_segment(image_path):
     return generated_text
 
 # Base directory where the page folders are located
-base_dir = "dataset/test" 
+base_dir = "../../data/test" 
 
 def sort_key(filename):
     """
