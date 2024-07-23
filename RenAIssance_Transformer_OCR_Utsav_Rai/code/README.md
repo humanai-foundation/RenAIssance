@@ -19,10 +19,11 @@ All hyperparameters and configuration settings are stored in `config.yaml`. Edit
 ```yaml
 # config.yaml
 
-image_dir: 'dataset/All_line_segments'
-text_dir: 'dataset/All_line_texts'
-model_dir: 'model/trocr_finetuned'
-train_batch_size: 4
+image_dir: '../data/train/All_line_segments'
+text_dir: '../data/train/All_line_texts'
+model_dir: '../models/custom'
+base_dir: '../data/test'
+train_batch_size: 4 # batch size of 4 requires 16 GB of GPU memory, this is per device batch size so for 2 GPU devices it will be 4 batch size each, in total 8
 eval_batch_size: 4
 fp16: False
 gradient_accumulation_steps: 1
@@ -41,10 +42,10 @@ learning_rate: 5e-6
 early_stopping_patience: 3
 early_stopping_threshold: 0.0
 wandb_project: "trocr-ocr-finetuning"
-wandb_key: "your_wandb_key"
-use_wandb: True
+wandb_key: "Your-wandb-key"
+use_wandb: False # switch to true and replace the wandb api key above
 model_name: "microsoft/trocr-large-handwritten"
-test_data_dir: "dataset/test"
+
 ```
 
 ## Training
