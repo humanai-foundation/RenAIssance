@@ -18,8 +18,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 # Paths to model and processor
-model_path = config["model_dir"]
-processor_path = config["model_dir"]
+model_path = config["inf_model_dir"]
+processor_path = config["inf_model_dir"]
 
 # Load the fine-tuned model and processor
 try:

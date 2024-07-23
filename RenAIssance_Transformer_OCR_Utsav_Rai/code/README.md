@@ -22,6 +22,7 @@ All hyperparameters and configuration settings are stored in `config.yaml`. Edit
 image_dir: '../data/train/All_line_segments'
 text_dir: '../data/train/All_line_texts'
 model_dir: '../models/custom'
+inf_model_dir: '../weights/printed_large'
 base_dir: '../data/test'
 train_batch_size: 4 # batch size of 4 requires 16 GB of GPU memory, this is per device batch size so for 2 GPU devices it will be 4 batch size each, in total 8
 eval_batch_size: 4
@@ -44,7 +45,8 @@ early_stopping_threshold: 0.0
 wandb_project: "trocr-ocr-finetuning"
 wandb_key: "Your-wandb-key"
 use_wandb: False # switch to true and replace the wandb api key above
-model_name: "microsoft/trocr-large-handwritten"
+model_name: "microsoft/trocr-large-printed"
+# model_name: "microsoft/trocr-large-handwritten"
 
 ```
 
@@ -62,6 +64,8 @@ To fine-tune the TrOCR model, use `train.py`. This script will train the model o
    ```
 
 ## Inference
+
+**Note**: Make sure the `inf_model_dir` in `config.yaml` is pointing to the newly finetuned model in models directory or the provided model in weights directory.
 
 To perform inference using the fine-tuned model, use `test.py`. This script will generate text from images in the test dataset and save the results.
 
@@ -109,6 +113,17 @@ This file contains utility functions and classes, including:
 - `generate_text_from_image_segment`: A function for generating text from a single image segment.
 - `sort_key`: A function for sorting filenames based on numeric values.
 
+### `datautils`
+
+Please refer to rthe eadme provided in this directory
+
+### `CRAFT`
+
+Text detection model by [CRAFT: Character-Region Awareness For Text detection](https://github.com/clovaai/CRAFT-pytorch)
+
+### `finetuning`
+
+This directory contains several examples of finetuning trocr model and epirical findings relevant to achieve higher accuracy.  
 ## Usage
 
 ### Training the Model
