@@ -2,10 +2,10 @@
 
 This project aims to develop a robust Optical Character Recognition (OCR) system for historical texts using the TrOCR model from Hugging Face's `transformers` library. This project is part of the HumanAI Foundation initiative and was developed during Google Summer of Code 2024.
 
-<div style="display: flex; justify-content: center; align-items: center;">
+<p align="center">
   <img src="figs/humanai.jpg" alt="Image 1" style="height: 100px; margin-right: 20px;"/>
   <img src="figs/gsoc_logo.png" alt="Image 2" style="height: 50px;" />
-</div>
+</p>
 
 
 
