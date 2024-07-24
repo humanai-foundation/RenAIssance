@@ -1,0 +1,9 @@
+huggingface_hub==0.24.2
+matplotlib==3.2.2
+numpy==1.24.4
+opencv_python==4.9.0.80
+pandas==1.4.4
+Pillow==10.4.0
+torch==2.2.1
+torchmetrics==1.2.1
+torchvision==0.17.1
