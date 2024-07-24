@@ -90,6 +90,13 @@ python test.py
 - Download the dataset containing two folders `All_line_segments` and `All_line_texts` and extract it into `data/train/` folder from [Google Drive](https://drive.google.com/drive/folders/1FX6H3IXh-GyeNFEN2SOBkQy4_m_cQ4DX?usp=drive_link).
 - Download the fine-tuned model named as `printed_large` and extract it into the `weights/` folder from [Google Drive](https://drive.google.com/drive/folders/1NMngL384GpGohOpwm3yxYaYJ_Oe_ikpv?usp=drive_link).
 
+## Model Performance
+
+| Metric | Value | Accuracy |
+|--------|-------|----------|
+| CER    | 0.02498 | 97.5%   |
+| WER    | 0.04777 | 95.223% |
+
 ## Acknowledgements
 
 This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024. Detailed documentation and a journey of this project can be found in the [blog post](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition).
