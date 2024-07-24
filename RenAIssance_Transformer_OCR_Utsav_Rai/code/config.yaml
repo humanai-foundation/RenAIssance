@@ -1,0 +1,28 @@
+image_dir: '../data/train/All_line_segments'
+text_dir: '../data/train/All_line_texts'
+model_dir: '../models/custom'
+inf_model_dir: '../weights/printed_large'
+base_dir: '../data/test'
+train_batch_size: 4 # batch size of 4 requires 16 GB of GPU memory, this is per device batch size so for 2 GPU devices it will be 4 batch size each, in total 8
+eval_batch_size: 4
+fp16: False
+gradient_accumulation_steps: 1
+num_train_epochs: 5
+max_grad_norm: 1.0
+logging_dir: './logs'
+logging_steps: 10
+evaluation_strategy: "steps"
+eval_steps: 200
+save_steps: 100000
+warmup_steps: 500
+weight_decay: 0.01
+save_total_limit: 1
+load_best_model_at_end: True
+learning_rate: 5e-6
+early_stopping_patience: 3
+early_stopping_threshold: 0.0
+wandb_project: "trocr-ocr-finetuning"
+wandb_key: "Your-wandb-key"
+use_wandb: False # switch to true and replace the wandb api key above
+model_name: "microsoft/trocr-large-printed"
+# model_name: "microsoft/trocr-large-handwritten"
