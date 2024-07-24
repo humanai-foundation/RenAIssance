@@ -1,6 +1,6 @@
 # Transformer OCR Fine-Tuning and Inference
 
-This directory contains scripts for fine-tuning the TrOCR model for Optical Character Recognition (OCR) on custom datasets and performing inference using the fine-tuned model. The TrOCR model is a Transformer-based model from Hugging Face's `transformers` library.
+This directory contains scripts for fine-tuning the [TrOCR](https://arxiv.org/abs/2109.10282) model for Optical Character Recognition (OCR) on custom datasets and performing inference using the fine-tuned model. The TrOCR model is a Transformer-based model from Hugging Face's `transformers` library.
 
 ## Table of Contents
 
