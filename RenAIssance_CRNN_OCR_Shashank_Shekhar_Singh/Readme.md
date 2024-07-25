@@ -4,7 +4,7 @@ This project aims to address the challenge of text recognition from `historical 
 
 <p align="center">
   <img src="images/humanai_logo.jpg" alt="HumanAI" style="height: 100px; margin-right: 20px;"/>
-  <img src="images/gsoc_logo.png" alt="GSOC" style="height: 50px; margin-bottom: 20px" />
+  <img src="images/gsoc_logo.png" alt="GSOC" style="height: 50px; padding-bottom: 50px" />
 </p>
 
 ## Table of Contents
@@ -46,8 +46,8 @@ You don't need to install anything externally, just fire up the python notebook 
 <p align="center"><img src="images/Pre_Process.png" alt="CRNN Architecture" style="height: 500px; margin-right: 20px;"/><p>
 - **CRAFT Model**: The CRAFT model for Bounding Box Detection and Localisation gives the following results.
     <p align="center">
-    <img src="images/imageOriginal.png" alt="Before CRAFT Model" style="height: 100px; margin-right: 20px;"/>
-    <img src="images/imageCRAFT.jpg" alt="After CRAFT Model" style="height: 50px;" />
+    <img src="images/imageOriginal.png" alt="Before CRAFT Model" style="height: 400px; margin-right: 20px;"/>
+    <img src="images/imageCRAFT.jpg" alt="After CRAFT Model" style="height: 400px;" />
     </p>
 - **Enhancements**: Augmentation techniques like rotation and Gaussian noise addition.
 
@@ -56,11 +56,11 @@ You don't need to install anything externally, just fire up the python notebook 
 the most prominent neural networks. The CRNN (convolutional recurrent
 neural network) involves CNN (convolutional neural network) followed by
 the RNN (Recurrent neural networks).
-<p align="center"><img src="images/CRNN.png" alt="CRNN Architecture" style="height: 100px; margin-right: 20px;"/></p>
+<p align="center"><img src="images/CRNN.png" alt="CRNN Architecture" style="height: 400px; margin-right: 20px;"/></p>
 - ***CNN***: CNNs are used for extracting spatial features from input images, transforming them into a feature map.
-<p align="center"><img src="images/CNN.png" alt="CNN Architecture" style="height: 100px; margin-right: 20px;"/></p>
+<p align="center"><img src="images/CNN.png" alt="CNN Architecture" style="height: 300px; margin-right: 20px;"/></p>
 - ***RNN***: RNNs then process these sequentially to capture contextual dependencies and predict character sequences.
-<p align="center"><img src="images/RNN.png" alt="RNN Architecture" style="height: 100px; margin-right: 20px;"/></p>
+<p align="center"><img src="images/RNN.png" alt="RNN Architecture" style="height: 300px; margin-right: 20px;"/></p>
 
 #### Training and Evaluation
 - **Hyperparameter Optimization**: Selection through vast amount of experimentation.
