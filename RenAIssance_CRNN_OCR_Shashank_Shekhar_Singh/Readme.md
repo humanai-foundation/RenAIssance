@@ -34,16 +34,16 @@ You don't need to install anything externally, just fire up the python notebook 
 #### Irregularities and Ambiguities
 - **Interchangeable Characters**: Characters like 'u' & 'v', and 'f' & 's' were used interchangeably. Assume 'u' at the beginning of word and 'v' inside word. Assume 's' at the beginning/end of a word, 'f' within a word.
 - **Tildes (horizontal “cap” – ignore grave/backwards accents)**: 
-1. When a q is capped, assume ue follows
-2. When a vowel is capped, assume n follows
-3. When n is capped, this is always the letter ñ
+    1. When a q is capped, assume ue follows
+    2. When a vowel is capped, assume n follows
+    3. When n is capped, this is always the letter ñ
 - **Old Spellings**: ç old spelling is always modern z.
 - **Line End Hyphens**: Some line end hyphens not present. Leaving words split for now.
 
 #### Dataset and Pre-processing
 - **Input Data:** The main dataset consists of 31 scanned pages: 25 have transcriptions available, the last 6 pages of transcriptions have been removed to later evaluate the degree of accuracy and viability of the test method employed.
 - **PDF and DOC to Images Folder**: This flowchart depicts the path followed to generate the dataset for training the CRNN Model.
-<p align="center"><img src="images/Pre_Process.png" alt="CRNN Architecture" style="height: 500px; margin-right: 20px;"/><p>
+    <p align="center"><img src="images/Pre_Process.png" alt="CRNN Architecture" style="height: 500px; margin-right: 20px;"/><p>
 - **CRAFT Model**: The CRAFT model for Bounding Box Detection and Localisation gives the following results.
     <p align="center">
     <img src="images/imageOriginal.png" alt="Before CRAFT Model" style="height: 400px; margin-right: 20px;"/>
