@@ -56,11 +56,11 @@ You don't need to install anything externally, just fire up the python notebook 
 the most prominent neural networks. The CRNN (convolutional recurrent
 neural network) involves CNN (convolutional neural network) followed by
 the RNN (Recurrent neural networks).
-    <img src="images/CRNN.png" alt="CRNN Architecture" style="height: 100px; margin-right: 20px;"/>
+<img src="images/CRNN.png" alt="CRNN Architecture" style="height: 100px; margin-right: 20px;"/>
 - ***CNN***: CNNs are used for extracting spatial features from input images, transforming them into a feature map.
-    <img src="images/CNN.png" alt="CNN Architecture" style="height: 100px; margin-right: 20px;"/>
+<img src="images/CNN.png" alt="CNN Architecture" style="height: 100px; margin-right: 20px;"/>
 - ***RNN***: RNNs then process these sequentially to capture contextual dependencies and predict character sequences.
-    <img src="images/RNN.png" alt="RNN Architecture" style="height: 100px; margin-right: 20px;"/>
+<img src="images/RNN.png" alt="RNN Architecture" style="height: 100px; margin-right: 20px;"/>
 
 #### Training and Evaluation
 - **Hyperparameter Optimization**: Selection through vast amount of experimentation.
