@@ -43,7 +43,7 @@ You don't need to install anything externally, just fire up the python notebook 
 #### Dataset and Pre-processing
 - **Input Data:** The main dataset consists of 31 scanned pages: 25 have transcriptions available, the last 6 pages of transcriptions have been removed to later evaluate the degree of accuracy and viability of the test method employed.
 - **PDF and DOC to Images Folder**: This flowchart depicts the path followed to generate the dataset for training the CRNN Model.
-    <img src="images/Pre_Process.png" alt="CRNN Architecture" style="height: 100px; margin-right: 20px;"/>
+<img src="images/Pre_Process.png" alt="CRNN Architecture" style="height: 500px; margin-right: 20px;"/>
 - **CRAFT Model**: The CRAFT model for Bounding Box Detection and Localisation gives the following results.
     <p align="center">
     <img src="images/imgeOriginal.jpg" alt="Before CRAFT Model" style="height: 100px; margin-right: 20px;"/>
