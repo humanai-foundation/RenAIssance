@@ -1,0 +1,33 @@
+{
+    "SSL": {
+        "dataset 1": null,
+        "dataset 2": null,
+        "dataset 3": null,
+        "epoch size": 1,
+        "Batch size": 16,
+        "start lr": 0.01,
+        "lr scheduler step size": 10000,
+        "saved Encoder path": "encoder.pt"
+    },
+    "fine-tuning": {
+        "dataset 1": null,
+        "dataset 1 csv": null,
+        "dataset 2": null,
+        "dataset 2 csv": null,
+        "dataset 3": null,
+        "dataset 3 csv": null,
+        "test dataset": null,
+        "fine-tune on other dataset": false,
+        "Encoder path for fine-tuning": "",
+        "Decoder path for fine-tuning": "",
+        "Freeze Encoder": true,
+        "epoch size": 1,
+        "Batch size": 16,
+        "start lr": 0.01,
+        "lr scheduler step size": 10000,
+        "char to token": "char_to_token.pkl",
+        "token to char": "token_to_char.pkl",
+        "saved Encoder path": "fine_tuned_encoder.pt",
+        "saved Decoder path": "decoder.pt"
+    }
+}
