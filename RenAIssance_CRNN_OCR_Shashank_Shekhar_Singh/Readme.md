@@ -1,6 +1,6 @@
 # Historical Text Recognition using CRNN Model
 
-This project aims to address the challenge of text recognition from `historical Spanish printed sources` dating back to the `seventeenth century`, a domain where existing Optical Character Recognition (OCR) tools often fail due to the complexity and variability of the texts. Leveraging hybrid end-to-end models based on a combination of CNN and RNN architectures, namely `CNN-RNN`, our research seeks to develop advanced machine learning techniques capable of accurately transcribing non-standard printed text. This project is a part of the `RenAIssance project`, a large project under the HumanAI organization. I am `Shashank Shekhar Singh`, a second year student from `IIT BHU, India` and have been developing this project as a part of the `Google Summer of Code program' 2024`.
+This project aims to address the challenge of text recognition from `historical Spanish printed sources` dating back to the `seventeenth century`, a domain where existing Optical Character Recognition (OCR) tools often fail due to the complexity and variability of the texts. Leveraging hybrid end-to-end models based on a combination of CNN and RNN architectures, namely `CNN-RNN`, our research seeks to develop advanced machine learning techniques capable of accurately transcribing non-standard printed text. This project is a part of the `RenAIssance project`, a large project under the HumanAI organization. I am `Shashank Shekhar Singh`, a third year student from `IIT BHU, India` and have been developing this project as a part of the `Google Summer of Code program' 2024`.
 
 <p align="center">
   <img src="images/humanai_logo.jpg" alt="HumanAI" style="height: 100px; margin-right: 20px;"/>
@@ -19,15 +19,18 @@ This project aims to address the challenge of text recognition from `historical 
 
 ## Project Goals
 
-1. **Development of Hybrid End-to-End Models:** The primary goal of this project is to design, implement, and fine-tune hybrid end-to-end models
-based on CRNN architectures for text recognition. By combining the strengths of architectures such as recurrent neural networks (RNN) and convolutional neural networks (CNN), the models aim to effectively capture both local and global features in the historical Spanish printed text enhancing accuracy and robustness in transcription.
-2. **Achieving High Accuracy:** The ultimate objective is to train machine
-learning models capable of extracting text from seventeenth-century
-Spanish printed sources with at least **80%** accuracy. This entails extensive experimentation, hyperparameter tuning, and dataset curation to ensure the models generalize well across various styles, fonts, and degradation levels present in historical documents. Achieving this goal will signify a significant advancement in text recognition, particularly in the context of preserving and analyzing ancient textual artifacts.
+1. **Development of Hybrid End-to-End Models:** The primary goal of this project is to design, implement, and fine-tune hybrid end-to-end models based on CRNN architectures for text recognition. By combining the strengths of architectures such as recurrent neural networks (RNN) and convolutional neural networks (CNN), the models aim to effectively capture both local and global features in the historical Spanish printed text enhancing accuracy and robustness in transcription.
+2. **Achieving High Accuracy:** The ultimate objective was to train machine
+learning models capable of extracting text from seventeenth-century Spanish printed sources with at least **80%** accuracy. This entails extensive experimentation, hyperparameter tuning, and dataset curation to ensure the models generalize well across various styles, fonts, and degradation levels present in historical documents. Achieving this goal will signify a significant advancement in text recognition, particularly in the context of preserving and analyzing ancient textual artifacts.
 
 ## Installation
 
-You don't need to install anything externally, just fire up the python notebook on your favourite coding platform (Google Colab, Jupter Notebook, Kaggle etc) and start running the cells one after the other.
+You don't need to install anything externally, just fire up the python notebook on your favourite coding platform (Google Colab, Jupter Notebook, Kaggle etc) and start running the code cells one after the other. All the packages that need to be installed are kept as the first code block in the Python Notebook.
+
+### Project Directory Structure
+1. **Dataset_Generation.ipynb** - It is a Python Notebook to generate training data from book PDF and Transcription. If you just want to train and test the CRNN model, you can directly skip running this notebook.
+
+2. **Model.ipynb** - It is a standalone Python Notebook that is used for model training and inferencing. It is trained on a corrected and modified data generated during the course of the GSoC period.
 
 ## About The Project
 
@@ -65,12 +68,18 @@ the RNN (Recurrent neural networks).
 - ***RNN***: RNNs then process these sequentially to capture contextual dependencies and predict character sequences.
 <p align="center"><img src="images/RNN.png" alt="RNN Architecture" style="height: 300px; margin-right: 20px;"/></p>
 
+- ***Current CRNN Architecture***: The model plot represents the CRNN architecture that has been trained in the Python Notebook shared above.
+<p align="center"><img src="images/CRNN_Plot.png" alt="CRNN Architecture" style="height: 600px; margin-right: 20px;"/></p>
+
 #### Training and Evaluation
 - **Hyperparameter Optimization**: Selection through vast amount of experimentation.
-- **Model Calibration**: Utilizes margin loss and other techniques to align sequence likelihoods with quality, improving output accuracy.
+- **Model Calibration**: Utilizes validation loss and other techniques to align sequence likelihoods with quality, improving output accuracy.
 - **Evaluation Metrics**: Performance evaluated using CTC Loss and Validation loss.
 
-For a detailed walkthrough of the project's development, challenges, and solutions, read the complete blog post [here](https://medium.com/@shashankshekharsingh1205/my-journey-with-humanai-in-the-google-summer-of-code24-program-679990ad7da4).
+- ***Loss vc Epochs***: The model has been made quite performant and light weight. It get's an optimum amount of training in just 10-15 epochs.
+<p align="center"><img src="images/Loss.png" alt="Learning Curve" style="height: 300px; margin-right: 20px;"/></p>
+
+For a detailed walkthrough of the project's development, challenges, and solutions, read the complete blog post [here](https://medium.com/@shashankshekharsingh1205/my-journey-with-humanai-in-the-google-summer-of-code24-program-part-2-bb42abce3495).
 
 ## Datasets and Models
 - The `Padilla - Nobleza virtuosa_testExtract.pdf` can be downloaded from [here](https://github.com/Shashankss1205/RenAIssance/blob/main/RenAIssance_CRNN_OCR_Shashank_Shekhar_Singh/data/Padilla_Nobleza_virtuosa_testExtract.pdf) 
@@ -81,12 +90,14 @@ For a detailed walkthrough of the project's development, challenges, and solutio
 
 | Metric | Value |
 |--------|-------|
-| CTC Loss | 0.0075 |
-| Validation Loss | 5.6956e-04 |
+| Character Accuracy | 95.79% |
+| CER | 0.027 |
+| CTC Loss | 0.1 |
+| Validation Loss | 0.07 |
 
 ## Acknowledgements
 
-This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024. Detailed documentation and a journey of this project can be found on my [blog post](https://medium.com/@shashankshekharsingh1205/my-journey-with-humanai-in-the-google-summer-of-code24-program-679990ad7da4).
+This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024. Detailed documentation and a journey of this project can be found on my [blog post](https://medium.com/@shashankshekharsingh1205/my-journey-with-humanai-in-the-google-summer-of-code24-program-part-2-bb42abce3495).
 
 ## License
 
