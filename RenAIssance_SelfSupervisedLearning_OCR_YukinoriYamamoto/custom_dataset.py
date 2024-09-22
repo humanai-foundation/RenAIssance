@@ -76,8 +76,9 @@ class ContrastiveLearningDataset(Dataset):
         self.augmented_transform = Compose([
             Lambda(lambda img: img.convert("RGB")),
             RandomApply([RandomVerticalCrop(crop_height_ratio=crop_height_ratio)], p=0.5),
+			# RandomApply([RandomAffine(degrees=3.5, translate=(0.05, 0.05), shear=15, fill=255)], p=0.4),
+            RandomRotation(degrees=3.5, fill=255),
             RandomApply([GaussianBlur(kernel_size=3)], p=0.3),
-			RandomApply([RandomAffine(degrees=3.5, translate=(0.05, 0.05), shear=15)], p=0.4),
 			Grayscale(num_output_channels=3),
             Resize(img_size),
             ToTensor(),
@@ -105,9 +106,9 @@ class DecoderDataset(Dataset):
         self.transform = transforms.Compose([
             Lambda(lambda img: img.convert("RGB")),
             # Lambda(lambda img: resize_and_pad(img=img, target_size=img_size)),
-            RandomApply([GaussianBlur(kernel_size=3)], p=0.3),
 			# RandomApply([RandomAffine(degrees=3.5, translate=(0.05, 0.05), shear=15)], p=0.4),
 			RandomRotation(degrees=3.5, fill=255),
+            RandomApply([GaussianBlur(kernel_size=3)], p=0.3),
 			Grayscale(num_output_channels=3),
             Resize(img_size),
             ToTensor(),  # Convert image to PyTorch Tensor in CHW format

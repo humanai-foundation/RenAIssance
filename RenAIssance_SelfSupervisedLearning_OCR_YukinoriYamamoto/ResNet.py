@@ -125,7 +125,7 @@ class ResNet34(nn.Module):
 
 class Bottleneck(nn.Module):
     expansion = 4
-    def __init__(self, in_channels, out_channels, stride=1):
+    def __init__(self, in_channels, out_channels, stride=(1, 1)):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(out_channels)
@@ -147,7 +147,7 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
         out = self.conv3(out)
         out = self.bn3(out)
-        if self.stride != 1 or identity.size() != out.size():
+        if self.stride != (1, 1) or identity.size() != out.size():
             identity = self.shortcut_conv(identity)
             identity = self.shortcut_bn(identity)
         out += identity
@@ -162,12 +162,12 @@ class ResNet50(nn.Module):
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(Bottleneck, 64, 3, stride=1)
-        self.layer2 = self._make_layer(Bottleneck, 128, 4, stride=2)
-        self.layer3 = self._make_layer(Bottleneck, 256, 6, stride=2)
-        self.layer4 = self._make_layer(Bottleneck, 512, 3, stride=1)
+        self.layer1 = self._make_layer(Bottleneck, 64, 3, stride=(1, 1))
+        self.layer2 = self._make_layer(Bottleneck, 128, 4, stride=(2, 2))
+        self.layer3 = self._make_layer(Bottleneck, 256, 6, stride=(2, 1))
+        self.layer4 = self._make_layer(Bottleneck, 512, 3, stride=(2, 1))
         self.last_conv = nn.Conv2d(2048, 512, kernel_size=1, stride=1, bias=False)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 44))
+        self.avgpool = nn.AvgPool2d(kernel_size=(2, 1), stride=(2, 1))
     
     def _make_layer(self, block, out_channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -184,12 +184,17 @@ class ResNet50(nn.Module):
         x = self.maxpool(x)
         for layer in self.layer1:
             x = layer(x)
+        # print("layer 1", x.shape)
         for layer in self.layer2:
             x = layer(x)
+        # print("layer 2", x.shape)
         for layer in self.layer3:
             x = layer(x)
+        # print("layer 3", x.shape)
         for layer in self.layer4:
             x = layer(x)
+        # print("layer 4", x.shape)
         x = self.last_conv(x)
         x = self.avgpool(x)
+        # print("avgpool", x.shape)
         return x
