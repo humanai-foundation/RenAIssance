@@ -12,7 +12,7 @@ class Encoder(nn.Module, PyTorchModelHubMixin):
         self.lstm = nn.LSTM(input_size=512, hidden_size=256, num_layers=2, batch_first=True, bidirectional=True)
 
     def forward(self, x):
-        # [batch size, channel(1), height(32), width(100)]
+        # [batch size, channel(3), height(32), width(100)]
         resnet_output = self.resnet(x)
         # [batch size, feature length(512), 1, sequence length(22)]
         resnet_output = torch.squeeze(resnet_output, dim=2)
