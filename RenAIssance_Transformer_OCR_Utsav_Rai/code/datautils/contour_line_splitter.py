@@ -35,7 +35,7 @@ def get_bounding_boxes(contours, img_width, img_height, padding=10, min_width=20
     for (x1, y1, x2, y2) in bounding_boxes:
         center = x1 + (x2 - x1) // 2
             
-        if abs(center - median_center) < 400:  # Preserve short lines near the center
+        if abs(center - median_center) < 800:  # Preserve short lines near the center
             print(f"center diff: {abs(center - median_center)}")
             filtered_boxes.append((x1, y1, x2, y2))
         else:
@@ -45,7 +45,7 @@ def get_bounding_boxes(contours, img_width, img_height, padding=10, min_width=20
     return filtered_boxes
 
 # Function to draw bounding boxes on an image
-def draw_bounding_boxes(image, bounding_boxes, color=(0, 255, 0), thickness=2):
+def draw_bounding_boxes(image, bounding_boxes, color=(0, 255, 0), thickness=10):
     for i, (x1, y1, x2, y2) in enumerate(bounding_boxes):
         cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
         cv2.putText(image, str(i + 1), (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
