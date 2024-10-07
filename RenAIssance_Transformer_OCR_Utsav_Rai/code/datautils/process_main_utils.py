@@ -1,13 +1,13 @@
 import fitz  # PyMuPDF
 from PIL import Image, ImageEnhance
-import math
 import cv2
 import numpy as np
-from skimage.filters import threshold_sauvola
-from deskew import determine_skew
 import os
 import argparse
+from skimage.filters import threshold_sauvola
+from deskew import determine_skew
 from typing import Tuple, Union
+import math
 
 def rotate(image: np.ndarray, angle: float, background: Union[int, Tuple[int, int, int]]) -> np.ndarray:
     old_width, old_height = image.shape[:2]
@@ -30,33 +30,34 @@ def deskew_image(image: np.ndarray) -> np.ndarray:
     else:
         return image
 
-def preprocess_image(image: np.ndarray) -> np.ndarray:
+def preprocess_image(image: np.ndarray, noise_removal_area_threshold: int, intensity_threshold: int) -> np.ndarray:
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # Rescale the image if it is too small
-    height, width = gray.shape
-    if height < 1000:
-        scale_factor = 1000 / height
-        gray = cv2.resize(gray, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
-    # Apply Sauvola's thresholding
-    window_size = 25
-    sauvola_threshold = threshold_sauvola(gray, window_size=window_size)
-    binary_sauvola = gray > sauvola_threshold
-    binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
-    # Ensure text is black and background is white
-    if np.mean(binary_sauvola) < 127:
-        binary_sauvola = cv2.bitwise_not(binary_sauvola)
-    
+    # Apply adaptive thresholding
+    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 25)
+
     # Apply morphological operations to remove small noise
-    kernel = np.ones((2, 2), np.uint8)  # Use a smaller kernel size
-    opened = cv2.morphologyEx(binary_sauvola, cv2.MORPH_OPEN, kernel)
+    kernel = np.ones((2, 2), np.uint8)  # Adjust kernel size based on noise size
+    opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
     closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
 
-    # Apply Non-Local Means Denoising with adjusted parameters
-    denoised = cv2.fastNlMeansDenoising(closed, None, h=15, templateWindowSize=7, searchWindowSize=21)
+    # Connected Component Analysis to remove small clusters
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(closed, connectivity=8)
+    sizes = stats[1:, -1]  # Get sizes of the components, ignoring the background
+    new_image = np.zeros((labels.shape), np.uint8)
+
+    # Filter out small components and apply intensity threshold
+    for i in range(1, num_labels):
+        component_mask = (labels == i)
+        component_intensity = np.mean(gray[component_mask])
+        if sizes[i - 1] >= noise_removal_area_threshold and component_intensity <= intensity_threshold:
+            new_image[component_mask] = 255
+
+    # Invert the image to have text in black and background in white
+    inverted_image = cv2.bitwise_not(new_image)
     
     # Add border to the image
-    bordered = cv2.copyMakeBorder(denoised, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+    bordered = cv2.copyMakeBorder(inverted_image, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=[255, 255, 255])
     return bordered
 
 def draw_hough_lines(img, lines, color=(0, 255, 255), thickness=2):
@@ -111,7 +112,7 @@ def remove_borders(image: np.ndarray) -> np.ndarray:
 
     return img_result
 
-def process_pdf(book_path, output_dir, dpi=300, remove_borders_flag=False):
+def process_pdf(book_path, output_dir, dpi=300, remove_borders_flag=False, noise_removal_area_threshold=10, intensity_threshold=128):
     # Check if the output directory exists, and create it if it doesn't
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -156,8 +157,8 @@ def process_pdf(book_path, output_dir, dpi=300, remove_borders_flag=False):
             right_half_deskewed = deskew_image(right_half)
 
             # Preprocess each half
-            left_half_processed = preprocess_image(left_half_deskewed)
-            right_half_processed = preprocess_image(right_half_deskewed)
+            left_half_processed = preprocess_image(left_half_deskewed, noise_removal_area_threshold, intensity_threshold)
+            right_half_processed = preprocess_image(right_half_deskewed, noise_removal_area_threshold, intensity_threshold)
 
             if remove_borders_flag:
                 left_half_processed = remove_borders(left_half_processed)
@@ -173,7 +174,7 @@ def process_pdf(book_path, output_dir, dpi=300, remove_borders_flag=False):
         else:
             # If it's a single page, process and save the entire image
             image_deskewed = deskew_image(image)
-            image_processed = preprocess_image(image_deskewed)
+            image_processed = preprocess_image(image_deskewed, noise_removal_area_threshold, intensity_threshold)
             
             if remove_borders_flag:
                 image_processed = remove_borders(image_processed)
@@ -192,6 +193,8 @@ if __name__ == "__main__":
     parser.add_argument("output_dir", type=str, help="Directory to save the processed images")
     parser.add_argument("--dpi", type=int, default=300, help="DPI for rendering PDF pages (default: 300)")
     parser.add_argument("--remove_borders", action="store_true", help="Remove borders from the processed images")
+    parser.add_argument("--noise_removal_area_threshold", type=int, default=10, help="Area threshold for removing small noise components (default: 10)")
+    parser.add_argument("--intensity_threshold", type=int, default=128, help="Intensity threshold for filtering out lighter bleed-through text (default: 128)")
 
     args = parser.parse_args()
-    process_pdf(args.book_path, args.output_dir, args.dpi, args.remove_borders)
+    process_pdf(args.book_path, args.output_dir, args.dpi, args.remove_borders, args.noise_removal_area_threshold, args.intensity_threshold)

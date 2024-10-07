@@ -17,6 +17,12 @@ min_width = 0
 threshold = 0.6
 margin = 0.1
 
+# New parameters for process_main_utils.py
+dpi = 300
+remove_borders = True
+noise_removal_area_threshold = 10
+intensity_threshold = 128
+
 # Ensure output directories exist
 os.makedirs(output_dir, exist_ok=True)
 os.makedirs(result_folder, exist_ok=True)
@@ -29,8 +35,10 @@ if not os.listdir(output_dir):
     subprocess.run([
         "python", "process_main_utils.py",
         book_path, output_dir,
-        "--dpi", "300",
-        "--remove_borders"
+        "--dpi", str(dpi),
+        "--remove_borders",
+        "--noise_removal_area_threshold", str(noise_removal_area_threshold),
+        "--intensity_threshold", str(intensity_threshold)
     ])
 else:
     print("Output directory is not empty. Skipping Step 1.")

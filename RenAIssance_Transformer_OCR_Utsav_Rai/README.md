@@ -1,13 +1,14 @@
 # Historical Text Recognition using TrOCR
 
-This project aims to develop a robust Optical Character Recognition (OCR) system for historical texts using the TrOCR model from Hugging Face's `transformers` library. This project is part of the HumanAI Foundation initiative and was developed during Google Summer of Code 2024.
-
 <p align="center">
   <img src="figs/humanai.jpg" alt="Image 1" style="height: 100px; margin-right: 20px;"/>
   <img src="figs/gsoc_logo.png" alt="Image 2" style="height: 50px;" />
 </p>
 
+This project aims to develop a robust Optical Character Recognition (OCR) system for historical texts using the TrOCR model from Hugging Face's `transformers` library. This project is part of the HumanAI Foundation initiative and was developed during Google Summer of Code 2024.
 
+
+![](figs/app.gif)
 
 ## Table of Contents
 
@@ -51,7 +52,7 @@ The primary objective is to create an advanced, transformer-based OCR model tail
 - **Model Calibration**: Utilizes margin loss and other techniques to align sequence likelihoods with quality, improving output accuracy.
 - **Evaluation Metrics**: Performance evaluated using CER, WER, and BLEU scores.
 
-For a detailed walkthrough of the project's development, challenges, and solutions, read the complete blog post [here](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition).
+For a detailed walkthrough of the project's development, challenges, and solutions, read the complete blog post [here](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [here](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition).
 
 ## Installation
 
@@ -60,6 +61,38 @@ Ensure you have Python 3.x and the necessary packages installed. You can install
 ```bash
 pip install -r requirements.txt
 ```
+## App Usage
+This tool is designed to make document digitization easier by allowing interactive control over processing and real-time feedback on the results.
+This tool allows you to process PDF documents with advanced image processing techniques like line segmentation, deskewing, border removal, and OCR (Optical Character Recognition). Using the CRAFT model, the tool identifies text regions and provides OCR on the segmented lines. You can interactively adjust parameters and view the results, including bounding boxes around detected text.
+
+### Features:
+- **Line Segmentation**: Automatically detects text regions and draws bounding boxes around them.
+- **Deskewing**: Corrects skewed text in the document for better recognition.
+- **Border Removal**: Removes borders to clean up images.
+- **OCR**: Extracts text from segmented regions using the TrOCR model.
+- **Interactive Sliders**: Adjust parameters like padding, noise threshold, and text region width.
+- **PDF Page Navigation**: Easily navigate between pages and save processed images.
+
+### Running the Application
+To start the application:
+1. Navigate to the project directory:
+   ```bash
+   cd code/app
+   ```
+2. Run the application:
+   ```bash
+   python main.py
+   ```
+  
+### How to Use:
+1. **Select a PDF File**: Click the "Select PDF" button to open a PDF file.
+2. **Adjust Processing Options**: Use the provided checkboxes and sliders to enable features like deskewing, border removal, and line segmentation. You can adjust parameters such as noise threshold, padding, and minimum width of the text region.
+3. **Enable Line Segmentation**: Toggle the "Line Segmentation" option to activate text detection. This will run the CRAFT model to detect text regions and visualize bounding boxes.
+4. **Run OCR**: After line segmentation, click "Run OCR" to extract text from the detected regions. The OCR output is displayed line-by-line.
+5. **Navigate Pages**: Use the "Next PDF Page" and "Previous PDF Page" buttons to move through the document.
+6. **Save Processed Images**: You can save the left or right page as an image with detected bounding boxes.
+
+This tool is designed to make document digitization easier by allowing interactive control over processing and real-time feedback on the results.
 ## Usage
 
 ### Data Preparation
@@ -99,7 +132,7 @@ python test.py
 
 ## Acknowledgements
 
-This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024. Detailed documentation and a journey of this project can be found in the [blog post](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition).
+This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024. Detailed documentation and a journey of this project can be found in the [blog post 1](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [blag post 2](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition).
 
 ## License
 
