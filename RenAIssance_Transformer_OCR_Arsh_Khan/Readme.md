@@ -88,13 +88,14 @@ The training process involves several key components to ensure the model effecti
    - **Gradient Accumulation**: Accumulates gradients over multiple mini-batches before updating model weights. This technique allows training with larger effective batch sizes without exceeding memory constraints.
    - **AdamW Optimizer**: A variant of the Adam optimizer that decouples weight decay from the optimization step, helping to improve generalization and prevent overfitting.
    - **Learning Rate Schedulers**:
-     - **Linear Learning Rate Scheduler**: Gradually decreases the learning rate from an initial value to a lower value.
-     - **ReduceLROnPlateau**: Reduces the learning rate when a plateau in performance is detected.
+     - **Cosine Scheduler**: Linearly increases the learning rate during a warm-up phase and then applies a cosine decay towards 0 for the remaining training steps. This smooth reduction helps improve convergence without abrupt changes.
+     - **Cosine Annealing**: Periodically decays and resets the learning rate in cycles, allowing the model to avoid local minima and promoting better exploration of the loss landscape, which can improve generalization and performance.
 
 3. **Regularization Techniques**:
    - **Dropout**: Randomly deactivates neurons during training to prevent overfitting.
    - **Weight Decay**: Penalizes large weights to encourage simpler models and improve generalization.
    - **Label Smoothing**: Softens target labels to prevent the model from becoming overconfident in its predictions.
+   - **Temperature Scaling**: It involves adjusting the logits of the output layer by a scalar temperature parameter to produce more calibrated probability estimates.
 
 4. **Warmup Ratio**:
    - Gradually increases the learning rate from a small initial value to the target learning rate over a few iterations at the start of training. This stabilizes the training process and improves convergence.
@@ -106,9 +107,30 @@ The training process involves several key components to ensure the model effecti
    - The model’s performance is continuously monitored using Character Error Rate (CER), Word Error Rate (WER), and BLEU Score during training to guide adjustments to hyperparameters and strategies.
 
 7. **Loss Function**:
+Various loss functions have been experimented and implemented to help the model fine-tune across different data distributions, to enhance both its accuracy and generalizability.
+
    - **Beam Search Loss**: Integrates beam search decoding into the training process, focusing on generating coherent and contextually relevant sequences. Includes refinements like length normalization and normalized log-likelihood objectives to ensure fair evaluation of sequence lengths.
+   - **Focal Loss**: Focal Loss is a modification of cross-entropy loss designed to address class imbalance by focusing more on hard-to-classify examples. It introduces a scaling factor, where pt is the predicted probability of the true class and γ is a tunable parameter (called the focusing parameter). This factor down-weights the contribution of easily classified examples, allowing the model to focus more on difficult or misclassified instances.
 
 By following this detailed preprocessing and training strategy, the Transformer OCR model is designed to achieve high accuracy and robust performance in recognizing complex historical Spanish texts.
+
+## Model Calibration
+Several Heuristics such as **label smoothing, beam search decoding, length normalization, and trigram blocking** have been implemented. However, these methods fall short as they are based on indirect supervision, influencing predictions without explicitly optimising the model for accurate probability distributions, leaving the problem of uncalibrated sequence likelihood unresolved.
+
+SLiC represents a natural extension of the current pretraining and fine-tuning paradigm, offering a more calibrated and robust approach to sequence generation, by calibrating sequence likelihoods directly in the model’s latent space.
+
+The SLiC objective function consists of two components: **Calibration Loss** and **Regularization Loss**.
+
+- **Calibration Loss**: This aims to align the model's predictions with the target sequence similarity. Two loss types are used for its implementation:
+  - **Rank Loss**: Ensures that positive candidates are ranked higher than negative ones.
+  - **Margin Loss**: Increases the probability gap between positive and negative candidates.
+
+- **Regularization Loss**: This prevents the model from diverging too far from its original objective. KL Divergence is used for regularization to maintain consistency in the model's predictions.
+
+Additionally, two other loss types are considered:
+  - **List-wise Rank Loss**: Optimizes the overall ranking of a list of candidates.
+  - **Expected Reward Loss**: Maximizes the expected similarity across all candidate sequences.
+
 
 ## Inference
 
@@ -145,9 +167,8 @@ The inference pipeline is designed to be efficient and accurate, leveraging the 
 
 The TrOCR model demonstrates significant improvements in OCR performance, especially for historical Spanish texts. Current Key performance metrics include:
 
-- **Character Error Rate (CER):** 0.05 (95% accuracy)
-- **Word Error Rate (WER):** 0.10 (90% accuracy)
-- **BLEU Score:** 0.9547
+- **Character Error Rate (CER):** 0.03 (97% accuracy)
+- **Word Error Rate (WER):** 0.07 (93% accuracy)
 
 --- 
 ## <ins>Useful Links
