@@ -22,3 +22,11 @@ To address these challenges, contributors have introduced various state-of-the-a
 3. **Self-Supervised Learning Approach**  
 
 All models, regardless of the approach used, achieve over 90% accuracy. For more detailed information on each approach, please refer to the contributors' repositories.
+
+## Synthetic Image Generation Project
+
+To further enhance OCR performance, the **Synthetic Image Generation Project** leverages generative techniques to expand and diversify training data:
+- **Image-to-Image GANs** are used to create realistic, word-level Renaissance-style synthetic images.
+- **Full-page image generation** employs transformations to mimic historical document aesthetics.
+
+This synthetic data augments the original dataset, helping models generalize better across the wide range of visual variability found in Renaissance-era Spanish documents.
