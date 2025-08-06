@@ -22,3 +22,27 @@ To address these challenges, contributors have introduced various state-of-the-a
 3. **Self-Supervised Learning Approach**  
 
 All models, regardless of the approach used, achieve over 90% accuracy. For more detailed information on each approach, please refer to the contributors' repositories.
+
+
+# RenAIssance
+
+RenAIssance is an open-source project by the HumanAI Foundation that applies Machine Learning and OCR (Optical Character Recognition) techniques to digitize and analyze historical manuscripts, books, and artworks. The goal is to make cultural heritage more accessible and machine-readable.
+
+---
+
+## 📌 Features
+
+- Text extraction from historical manuscripts and scans.
+- OCR support using open-source tools like Tesseract.
+- Preprocessing tools for noisy or aged documents.
+- Support for multilingual recognition and layout parsing (coming soon).
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/humanai-foundation/RenAIssance.git
+cd RenAIssance
