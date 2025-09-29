@@ -1,0 +1,23 @@
+{
+  "total_pairs": 173574,
+  "avg_edit_distance": 1.2323331835413138,
+  "rule_counts": {
+    "ocr_confusion": 34984,
+    "historical": 30925,
+    "typo": 54598,
+    "phonetic": 15921,
+    "identity": 8775,
+    "diacritic": 16668,
+    "merge_split": 17988
+  },
+  "edit_distance_distribution": {
+    "1": 124116,
+    "0": 8775,
+    "3": 7113,
+    "2": 32966,
+    "4": 514,
+    "5": 82,
+    "6": 8
+  },
+  "seed": 42
+}
