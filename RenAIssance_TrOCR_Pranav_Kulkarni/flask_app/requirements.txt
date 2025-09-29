@@ -1,0 +1,20 @@
+torch==2.3.1+cu118
+torchvision==0.18.1+cu118
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+# Precompiled Detectron2 wheel (replace cu118 with your CUDA version if needed)
+# -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.3/index.html
+# detectron2==0.6
+
+flask==3.0.3
+flask-cors==4.0.1
+Werkzeug==3.0.3
+
+transformers==4.44.2
+Pillow==10.4.0
+opencv-python-headless==4.10.0.84
+pymupdf==1.24.10
+scipy==1.14.1
+numpy==1.26.4
+google-genai==1.29.0
+google-generativeai
