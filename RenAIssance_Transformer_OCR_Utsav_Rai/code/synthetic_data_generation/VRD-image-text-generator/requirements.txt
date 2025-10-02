@@ -1,0 +1,7 @@
+beautifulsoup4==4.12.3
+click==8.1.7
+numpy==1.26.4
+Pillow==9.5.0
+Requests==2.31.0
+torch==2.2.2
+torchvision==0.17.2

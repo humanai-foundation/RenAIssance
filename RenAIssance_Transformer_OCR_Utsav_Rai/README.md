@@ -73,7 +73,7 @@ This tool allows you to process PDF documents with advanced image processing tec
 - **Interactive Sliders**: Adjust parameters like padding, noise threshold, and text region width.
 - **PDF Page Navigation**: Easily navigate between pages and save processed images.
 
-### Running the Application
+### Running the Streamlit Application
 To start the application:
 1. Navigate to the project directory:
    ```bash
@@ -81,7 +81,7 @@ To start the application:
    ```
 2. Run the application:
    ```bash
-   python main.py
+   streamlit run app_streamlit.py
    ```
   
 ### How to Use:
@@ -104,7 +104,7 @@ This tool is designed to make document digitization easier by allowing interacti
 
 ### Training
 
-To fine-tune the TrOCR model, use the `train.py` script. More information can be found in the `code/` folder.
+To fine-tune the TrOCR model, use the `train.py` script. More information can be found in the `code/` folder. Explore more finetuning strategies under `code/finetuning`.
 
 ```bash
 python train.py
@@ -121,18 +121,19 @@ python test.py
 ## Datasets and Models
 
 - Download the dataset containing two folders `All_line_segments` and `All_line_texts` and extract it into `data/train/` folder from [Google Drive](https://drive.google.com/drive/folders/1FX6H3IXh-GyeNFEN2SOBkQy4_m_cQ4DX?usp=drive_link).
-- Download the fine-tuned model named as `printed_large` and extract it into the `weights/` folder from [Google Drive](https://drive.google.com/drive/folders/1NMngL384GpGohOpwm3yxYaYJ_Oe_ikpv?usp=drive_link).
-
+- Download the fine-tuned model named as `printed_large` and extract it into the `models/` folder from [Google Drive](https://drive.google.com/drive/folders/1NMngL384GpGohOpwm3yxYaYJ_Oe_ikpv?usp=drive_link). Also extract all three weights for CRAFT under `weights/` folder using [link1](https://drive.google.com/file/d/1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ/view), [link2](https://drive.google.com/file/d/1i2R7UIUqmkUtF0jv_3MXTqmQ_9wuAnLf/view) and [link3](https://drive.google.com/file/d/1XSaFwBkOaFOdtk4Ane3DFyJGPRw6v5bO/view).
+ 
 ## Model Performance
 
 | Metric | Value | Accuracy |
 |--------|-------|----------|
-| CER    | 0.02498 | 97.5%   |
-| WER    | 0.04777 | 95.223% |
+| CER    | 0.019 | 98.1%   |
+| WER    | 0.048 | 95.2% |
 
+BLEU = 0.92
 ## Acknowledgements
 
-This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024. Detailed documentation and a journey of this project can be found in the [blog post 1](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [blag post 2](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition).
+This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024 and 2025. Detailed documentation and a journey of this project during 2024 can be found in the [blog post 1](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [blag post 2](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition). For 2025 refer [2025 midterm blog](https://utsavrai.substack.com/p/efficient-transformer-based-ocr-for?r=3ypuho).
 
 ## License
 
@@ -141,6 +142,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Links
 
 - [Google Summer of Code 2024 Project](https://summerofcode.withgoogle.com/programs/2024/projects/IxqaG5cU)
+- [Google Summer of Code 2025 Project](https://summerofcode.withgoogle.com/programs/2025/projects/SWLdu59R)
 - [HumanAI Foundation](https://humanai.foundation/)
 
 Feel free to fork the repository and submit pull requests. For major changes, please open an issue to discuss your ideas first. Contributions are always welcome!

@@ -77,6 +77,35 @@ To perform inference using the fine-tuned model, use `test.py`. This script will
    ```bash
    python test.py
    ```
+## Quantization
+
+The `quantization` folder provides scripts for quantizing the TrOCR model using ONNX and evaluating the quantized model's accuracy and performance. The quantization process reduces model size and improves inference speed with minimal impact on accuracy.
+
+- **Quantization Script:**  
+  Use `quantization/onnx_quat.py` to convert the fine-tuned PyTorch model to ONNX format and apply dynamic quantization. The script also compares inference speed and storage requirements before and after quantization.
+
+- **Evaluation Script:**  
+  Use `quantization/evaluate_quat.py` to evaluate the quantized model against the original PyTorch model. This script computes metrics such as Character Error Rate (CER), Word Error Rate (WER), and inference time, and generates visualizations for comparison.
+
+Refer to the scripts in the `quantization/` directory for detailed usage and results.
+
+---
+
+## Synthetic Data Generation
+
+The `synthetic_data_generation` directory leverages [VRD-image-text-generator](https://github.com/v-laurent/VRD-image-text-generator) to create synthetic image-text pairs for OCR training.
+
+- **Script:**  
+  The main script is `synthetic_data_generation/VRD-image-text-generator/auto_generation.py`.
+
+- **Generating Synthetic Images:**  
+  To generate synthetic images from existing text files, use the following command:
+  ```bash
+  python auto_generation.py --input_file your_text_file.txt --font_size 24 --add_random_text True --apply_data_augmentation True
+  ```
+  This will create paired images and text files in the output directories.
+
+See the script and its command-line options for more details on customizing the synthetic data generation
 
 ## Files Description
 

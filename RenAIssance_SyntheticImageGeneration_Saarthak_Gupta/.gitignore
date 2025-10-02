@@ -1,0 +1,11 @@
+data/GAN-DATA/2_splitted
+data/GAN-DATA/3_processed
+data/GAN-DATA/4_bounding_boxes
+data/GAN-DATA/5_mapped
+data/GAN-DATA/6_word_data
+data/GAN-DATA/final_dataset
+data
+models
+proposal.pdf
+output
+CRAFT-pytorch

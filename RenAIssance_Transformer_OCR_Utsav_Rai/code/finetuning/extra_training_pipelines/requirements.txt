@@ -1,0 +1,23 @@
+# Core dependencies
+torch
+torchvision
+transformers==4.51.3
+accelerate
+datasets
+
+# Image processing
+Pillow
+matplotlib
+
+# Text processing
+nltk
+python-Levenshtein
+jiwer
+
+# Evaluation metrics
+evaluate
+
+# Utilities
+numpy
+tqdm
+tensorboard
