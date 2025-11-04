@@ -1,0 +1,29 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+uvicorn
+gunicorn==21.2.0
+fastapi
+python-multipart
+
+PyMuPDF 
+python-docx 
+opencv-python 
+scipy 
+torch 
+scikit-image
+torchvision==0.2.1 
+# If it fails, try doing: pip install torchvision --upgrade --extra-index-url https://download.pytorch.org/whl/cu124
+# tensorflow==2.15 
+pydot
+numpy==1.24.3
+# opencv-python==4.8.1.78
+Pillow==10.0.1
+
+pandas
+# Uncomment the following lines if you want to use CPU versions of TensorFlow and PyTorch and remove the GPU versions
+tensorflow-cpu==2.15
+# torch==2.2.0+cpu
+# torchvision==0.17.0+cpu
+
+# Uncomment the following line if you want to use OpenCV without GUI features
+opencv-python-headless
