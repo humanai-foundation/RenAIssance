@@ -133,7 +133,7 @@ python test.py
 BLEU = 0.92
 ## Acknowledgements
 
-This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024 and 2025. Detailed documentation and a journey of this project during 2024 can be found in the [blog post 1](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [blag post 2](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition). For 2025 refer [2025 midterm blog](https://utsavrai.substack.com/p/efficient-transformer-based-ocr-for?r=3ypuho).
+This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024 and 2025. Detailed documentation and a journey of this project during 2024 can be found in the [blog post 1](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [blog post 2](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition). For 2025 refer [2025 midterm blog](https://utsavrai.substack.com/p/efficient-transformer-based-ocr-for?r=3ypuho).
 
 ## License
 
