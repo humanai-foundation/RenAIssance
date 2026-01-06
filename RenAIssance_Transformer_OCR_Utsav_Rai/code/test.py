@@ -7,7 +7,8 @@ from utils import sort_key, generate_text_from_image_segment
 
 # Load configuration
 try:
-    with open("config.yaml", "r") as file:
+    config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
+    with open(config_path, "r") as file:
         config = yaml.safe_load(file)
 except FileNotFoundError:
     raise Exception("Configuration file not found.")

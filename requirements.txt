@@ -1,0 +1,24 @@
+# Root-level requirements for RenAIssance project
+# This file contains common dependencies across all sub-projects.
+# For project-specific requirements, please refer to the requirements.txt in each sub-project directory.
+
+# Core dependencies
+numpy>=1.24.4
+Pillow>=10.2.0
+opencv-python>=4.9.0.80
+matplotlib>=3.2.2
+pyyaml>=6.0.1
+
+# Machine Learning frameworks
+torch>=2.2.1
+torchvision>=0.17.1
+transformers>=4.39.1
+datasets>=2.18.0
+
+# Utilities
+tqdm>=4.66.2
+scikit-learn>=1.4.2
+scipy>=1.13.0
+
+# Note: Each sub-project may have additional specific requirements.
+# Please install requirements from the specific sub-project directory for that project's needs.
