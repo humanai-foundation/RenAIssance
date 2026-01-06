@@ -1,7 +1,9 @@
+![thumbnail](https://github.com/user-attachments/assets/b0aa865c-416c-4a3a-92be-56a1a77c8f4e)
 # RenAIssance
 The analysis of historical documents is a critical yet costly method in the Humanities. To reduce these costs, AI technology, specifically OCR (Optical Character Recognition), has started to be utilized. However, for many years, there was a lack of accurate OCR tools for Spanish documents from the Renaissance period, despite their academic importance. To address this issue, the HumanAI Foundation launched the **RenAIssance** project, where contributors implement accurate OCR models using various approaches.
 
-# Dataset
+# Dataset 
+![letters](https://github.com/user-attachments/assets/c10584db-8f68-4897-a6c4-c70411ed9515)
 
 The dataset used to train these models consists of images of printed documents from the target era, collected from diverse sources. A portion of the data has been manually labeled by RenAIssance mentors, who are experts in Spanish historical documents. The following printing irregularities in the data present challenges for creating high-accuracy OCR models:
 

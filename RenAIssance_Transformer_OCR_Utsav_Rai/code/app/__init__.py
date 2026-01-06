@@ -1,1 +1,2 @@
-# App package for RenAIssance OCR
+# Application package for Transformer OCR
+

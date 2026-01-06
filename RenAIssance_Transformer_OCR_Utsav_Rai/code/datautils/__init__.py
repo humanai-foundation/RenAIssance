@@ -1,1 +1,2 @@
-# Data utilities package for RenAIssance OCR
+# Data utilities package for Transformer OCR
+

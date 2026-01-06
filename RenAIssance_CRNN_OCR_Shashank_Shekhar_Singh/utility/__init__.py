@@ -1,1 +1,2 @@
-# Utility package for CRNN OCR
+# Utility package for CRNN OCR implementation
+

@@ -1,1 +1,2 @@
-# Source package for synthetic image generation
+# Source package for Synthetic Image Generation
+
