@@ -193,4 +193,4 @@ This project was developed as part of the **Google Summer of Code (GSoC)** initi
 ---
 ## License
 
-This project is licensed under the MIT License. See the [MIT Licence](https://github.com/humanai-foundation/RenAIssance/blob/main/RenAIssance_Transformer_OCR_Arsh_Khan/LICENCE)
+This project is licensed under the MIT License. See the [MIT Licence](https://github.com/humanai-foundation/RenAIssance/blob/main/RenAIssance_Transformer_OCR_Arsh_Khan/LICENSE)
