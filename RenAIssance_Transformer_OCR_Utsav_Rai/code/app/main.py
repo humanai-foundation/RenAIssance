@@ -603,23 +603,15 @@ def transcribe_and_display_ocr():
     # Transcribe lines from the left page if available, updating the display line by line
     if left_page_image is not None and ocr_bounding_boxes_left is not None:
         display_text("Transcribing Left Page:\n")
-        for i, (x1, y1, x2, y2) in enumerate(ocr_bounding_boxes_left):
-            # Crop each line segment from the left page image
-            line_segment = left_page_image[y1:y2, x1:x2]
-            # Generate text from the image segment
-            text = generate_text_from_image_segment(line_segment)
-            # display_text(f"Line {i+1}: {text}")
+        left_page_texts = crop_and_transcribe(left_page_image, ocr_bounding_boxes_left)
+        for text in left_page_texts:
             display_text(f"{text}")
     
     # Transcribe lines from the right page if available, updating the display line by line
     if right_page_image is not None and ocr_bounding_boxes_right is not None:
         display_text("\nTranscribing Right Page:\n")
-        for i, (x1, y1, x2, y2) in enumerate(ocr_bounding_boxes_right):
-            # Crop each line segment from the right page image
-            line_segment = right_page_image[y1:y2, x1:x2]
-            # Generate text from the image segment
-            text = generate_text_from_image_segment(line_segment)
-            # display_text(f"Line {i+1}: {text}")
+        right_page_texts = crop_and_transcribe(right_page_image, ocr_bounding_boxes_right)
+        for text in right_page_texts:
             display_text(f"{text}")
 
     # Add closing text when transcription is complete
