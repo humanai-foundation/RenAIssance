@@ -22,3 +22,8 @@ To address these challenges, contributors have introduced various state-of-the-a
 3. **Self-Supervised Learning Approach**  
 
 All models, regardless of the approach used, achieve over 90% accuracy. For more detailed information on each approach, please refer to the contributors' repositories.
+
+
+## License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
