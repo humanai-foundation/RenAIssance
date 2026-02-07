@@ -1,31 +1,31 @@
 {
     "Encoder" : {
-        "ViT": false
+        "ViT": true
     },
     "SSL": {
-        "dataset 1": "/home/yukinori/Desktop/CRAFT-pytorch/self_supervised_data/word_images",
+        "dataset 1": "test_images",
         "dataset 2": null,
         "dataset 3": null,
         "epoch size": 1,
-        "Batch size": 32,
+        "Batch size": 2,
         "start lr": 0.001,
         "lr scheduler step size": 2,
-        "saved Encoder path": "ViT_encoder.pth"
+        "saved Encoder path": "ViT_encoder_test.pth"
     },
     "fine-tuning": {
-        "dataset 1": "/home/yukinori/Desktop/CRAFT-pytorch/Perfecto/Perfecto/word_images",
-        "dataset 1 csv": "/home/yukinori/Desktop/CRAFT-pytorch/Perfecto/Perfecto/word_images.csv",
-        "dataset 2": "/home/yukinori/Desktop/CRAFT-pytorch/Ezcaray/word_images",
-        "dataset 2 csv": "/home/yukinori/Desktop/CRAFT-pytorch/Ezcaray/word_images.csv",
-        "dataset 3": "/home/yukinori/Desktop/CRAFT-pytorch/Virtuosa/word_images",
-        "dataset 3 csv": "/home/yukinori/Desktop/CRAFT-pytorch/Virtuosa/word_images.csv",
-        "test dataset": "/home/yukinori/Desktop/CRAFT-pytorch/self_supervised_data/word_images",
-        "fine-tune on other dataset": true,
+        "dataset 1": null,
+        "dataset 1 csv": null,
+        "dataset 2": null,
+        "dataset 2 csv": null,
+        "dataset 3": null,
+        "dataset 3 csv": null,
+        "test dataset": "test_images",
+        "fine-tune on other dataset": false,
         "Encoder path for fine-tuning": "models/trdg_Encoder_9_13.pt",
         "Decoder path for fine-tuning": "models/trdg_Decoder_9_13.pt",
         "Freeze Encoder": false,
-        "epoch size": 30,
-        "Batch size": 32,
+        "epoch size": 1,
+        "Batch size": 2,
         "start lr": 0.0001,
         "lr scheduler step size": 20,
         "char to token": "Tokenizer/char_to_token.pkl",
