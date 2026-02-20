@@ -1,3 +1,7 @@
+venv/
+.vscode/
+__pycache__/
+*.pyc
 data/GAN-DATA/2_splitted
 data/GAN-DATA/3_processed
 data/GAN-DATA/4_bounding_boxes
