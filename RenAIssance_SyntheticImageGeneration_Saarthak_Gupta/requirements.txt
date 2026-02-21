@@ -1,0 +1,38 @@
+# RenAIssance — Synthetic Image Generation (Saarthak Gupta)
+# Install PyTorch separately with the correct CUDA/CPU build for your system:
+#   https://pytorch.org/get-started/locally/
+# Example (CUDA 12.4):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+# Example (CPU only):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+#
+# Windows extra step — Tesseract OCR binary (required for data pipeline):
+#   Install from https://github.com/UB-Mannheim/tesseract/wiki
+#   Then add the install directory to your system PATH.
+#
+# Windows extra step — RomanAntique font (required for word rendering):
+#   Copy the font file from the fonts/ folder into C:\Windows\Fonts
+#   or update the font path in src/data_utils.py.
+
+# Core deep learning
+torchvision>=0.15.0
+Pillow>=9.0.0
+numpy>=1.23.0
+
+# Data handling
+pandas>=1.5.0
+scikit-image>=0.20.0
+
+# Computer vision / PDF processing
+opencv-python>=4.7.0
+PyMuPDF>=1.24.0        # fitz — converts PDF pages to images
+
+# Document processing
+python-docx>=0.8.11    # reads .docx transcription files
+
+# OCR (data pipeline only)
+pytesseract>=0.3.10    # requires Tesseract binary installed separately
+
+# Visualization / utilities
+matplotlib>=3.5.0
+tqdm>=4.64.0

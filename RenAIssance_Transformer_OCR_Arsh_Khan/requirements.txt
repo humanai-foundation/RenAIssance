@@ -1,0 +1,27 @@
+# RenAIssance — Transformer OCR (Arsh Khan)
+# Install PyTorch separately with the correct CUDA/CPU build for your system:
+#   https://pytorch.org/get-started/locally/
+# Example (CUDA 12.4):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+# Example (CPU only):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Core deep learning
+transformers>=4.30.0
+Pillow>=9.0.0
+numpy>=1.23.0
+
+# Computer vision / image processing
+opencv-python>=4.7.0
+scikit-image>=0.20.0
+imutils>=0.5.4
+deskew>=1.4.0
+albumentations>=1.3.0
+
+# OCR evaluation metrics
+jiwer>=3.0.0
+sacrebleu>=2.3.0
+
+# Visualization / utilities
+matplotlib>=3.5.0
+tqdm>=4.64.0
