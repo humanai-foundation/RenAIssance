@@ -1,6 +1,6 @@
 # Historical Text Recognition using CRNN Model
 
-This project aims to address the challenge of text recognition from `historical Spanish printed sources` dating back to the `seventeenth century`, a domain where existing Optical Character Recognition (OCR) tools often fail due to the complexity and variability of the texts. Leveraging hybrid end-to-end models based on a combination of CNN and RNN architectures, namely `CNN-RNN`, our research seeks to develop advanced machine learning techniques capable of accurately transcribing non-standard printed text. This project is a part of the `RenAIssance project`, a large project under the HumanAI organization. I am `Shashank Shekhar Singh`, a third year student from `IIT BHU, India` and have been developing this project as a part of the `Google Summer of Code program' 2024`.
+This project aims to address the challenge of text recognition from `historical Spanish printed sources` dating back to the `seventeenth century`, a domain where existing Optical Character Recognition (OCR) tools often fail due to the complexity and variability of the texts. Leveraging hybrid end-to-end models based on a combination of CNN and RNN architectures, namely `CNN-RNN`, our research seeks to develop advanced machine learning techniques capable of accurately transcribing non-standard printed text. This project is a part of the `RenAIssance project`, a large project under the HumanAI organization. I am `Shashank Shekhar Singh`, a third year student from `IIT BHU, India` and have been developing this project as a part of the `Google Summer of Code 2024 program`.
 
 <p align="center">
   <img src="images/humanai_logo.jpg" alt="HumanAI" style="height: 100px; margin-right: 20px;"/>
@@ -9,9 +9,9 @@ This project aims to address the challenge of text recognition from `historical 
 
 ## Table of Contents
 
-- [Project Goals](#Project-Goals)
+- [Project Goals](#project-Goals)
 - [Installation](#installation)
-- [About The Project](#About-The-Project)
+- [About The Project](#about-The-Project)
 - [Datasets and Models](#datasets-and-models)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
@@ -25,7 +25,7 @@ learning models capable of extracting text from seventeenth-century Spanish prin
 
 ## Installation
 
-You don't need to install anything externally, just fire up the python notebook on your favourite coding platform (Google Colab, Jupter Notebook, Kaggle etc) and start running the code cells one after the other. All the packages that need to be installed are kept as the first code block in the Python Notebook.
+You don't need to install anything externally, just fire up the python notebook on your favourite coding platform (Google Colab, Jupyter Notebook, Kaggle etc) and start running the code cells one after the other. All the packages that need to be installed are kept as the first code block in the Python Notebook.
 
 ### Project Directory Structure
 1. **Dataset_Generation.ipynb** - It is a Python Notebook to generate training data from book PDF and Transcription. If you just want to train and test the CRNN model, you can directly skip running this notebook.
@@ -76,7 +76,7 @@ the RNN (Recurrent neural networks).
 - **Model Calibration**: Utilizes validation loss and other techniques to align sequence likelihoods with quality, improving output accuracy.
 - **Evaluation Metrics**: Performance evaluated using CTC Loss and Validation loss.
 
-- ***Loss vc Epochs***: The model has been made quite performant and light weight. It get's an optimum amount of training in just 10-15 epochs.
+- ***Loss vs Epochs***: The model has been made quite performant and light weight. It gets an optimum amount of training in just 10-15 epochs.
 <p align="center"><img src="images/Loss.png" alt="Learning Curve" style="height: 300px; margin-right: 20px;"/></p>
 
 For a detailed walkthrough of the project's development, challenges, and solutions, read the complete blog post [here](https://medium.com/@shashankshekharsingh1205/my-journey-with-humanai-in-the-google-summer-of-code24-program-part-2-bb42abce3495).
