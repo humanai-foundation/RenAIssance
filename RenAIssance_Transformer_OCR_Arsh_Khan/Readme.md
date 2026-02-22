@@ -1,6 +1,6 @@
 ![](https://github.com/humanai-foundation/RenAIssance/blob/main/RenAIssance_Transformer_OCR_Arsh_Khan/images/humanai.png)
 
-# <ins>Table of Contents
+# <ins>Table of Contents</ins>
 
 * [About the Project](#about-the-project)
 * [Printing Irregularities](#printing-irregularities)
@@ -15,12 +15,12 @@
 
 ---
 
-# <ins>About the Project
+# <ins>About the Project</ins>
 
 **This project aims to develop a hybrid end-to-end Transformer model capable of accurately recognizing text from non-standard Spanish printed sources from the 16th and 17th centuries. It was developed as part of the Google Summer of Code (GSoC) initiative.**
 
 ---
-# <ins> Printing Irregularities
+# <ins>Printing Irregularities</ins>
 
 Historical texts from the 16th and 17th centuries present a variety of printing irregularities that significantly challenge Optical Character Recognition (OCR) systems. These irregularities arise from the printing limitations and linguistic conventions of the period. Our model specifically addresses these challenges to improve text recognition accuracy. Below are some common irregularities and how they are managed:
 
@@ -52,7 +52,7 @@ To effectively manage these printing irregularities, the project employs a combi
 These strategies enable the model to overcome the complexities of historical printing irregularities, improving the overall accuracy and reliability of OCR results for early Spanish printed sources. This work not only advances the preservation of historical documents but also enhances their accessibility for modern research.
 
 ---
-# <ins>Theory And Approach
+# <ins>Theory And Approach</ins>
 
 ## Data Preprocessing
 
@@ -70,7 +70,7 @@ Data preprocessing is a critical step in historical document text recognition, a
 
 3. **Layout Analysis and Line Segmentation**:
    - **UNet Segmentation**: Used for layout analysis to identify main text regions.
-   - **Astar Path Planning Algorithm**: Applied for line segmentation to identify individual text lines. This involves calculating horizontal projection profiles and applying path planning algorithms to accurately segment text lines.
+   - **A\* Path Planning Algorithm**: Applied for line segmentation to identify individual text lines. This involves calculating horizontal projection profiles and applying path planning algorithms to accurately segment text lines.
 
 4. **Data Augmentation**: 
    - Various augmentation techniques are applied, including **Gaussian Noise, Optical Distortion, CLAHE, Affine Transformations, Perspective Transformations, and Elastic Transformations.**
@@ -150,7 +150,7 @@ Inference is the final stage where the trained model is used to recognize text f
 
 4. **Performance Metrics**:
    - The quality of the model’s output during inference is evaluated using Character Error Rate (CER), Word Error Rate (WER), and BLEU Score. These metrics provide insight into the accuracy and readability of the transcriptions.
-   - Levenshtein Distance, may also be used to quantify the dissimilarity between the predicted and ground truth text strings, providing another measure of transcription accuracy.
+   - Levenshtein distance may also be used to quantify the dissimilarity between the predicted and ground truth text strings, providing another measure of transcription accuracy.
 
 5. **Output**:
    - The final output is a transcribed text file, where the historical document's content is digitized and accessible for further analysis or preservation.
@@ -163,7 +163,7 @@ Inference is the final stage where the trained model is used to recognize text f
 The inference pipeline is designed to be efficient and accurate, leveraging the model’s learned capabilities to handle the complexities of historical Spanish documents. By integrating sophisticated preprocessing, decoding, and post-processing techniques, the system aims to provide high-quality OCR results that facilitate research and preservation efforts.
 
 ---
-## <ins> Results
+## <ins>Results</ins>
 
 The TrOCR model demonstrates significant improvements in OCR performance, especially for historical Spanish texts. Current Key performance metrics include:
 
@@ -171,7 +171,7 @@ The TrOCR model demonstrates significant improvements in OCR performance, especi
 - **Word Error Rate (WER):** 0.07 (93% accuracy)
 
 --- 
-## <ins>Useful Links
+## <ins>Useful Links</ins>
 
 For more comprehensive details about the project and documentation, you can explore the following links:
 
@@ -186,7 +186,7 @@ Contributions to this project are welcome. If you are interested in contributing
 
 ---
 
-## <ins>Acknowledgements
+## <ins>Acknowledgements</ins>
 
 This project was developed as part of the **Google Summer of Code (GSoC)** initiative, with support from the **HumanAI Foundation** and contributions from the open-source community.
 
