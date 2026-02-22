@@ -1,12 +1,12 @@
 # Synthetic text generation with Generative Models
 
-For Historical Manuscripts, limited availability of data a limiting factor in training OCR or Layout Detection models. This project propose a solution to this bottleneck by using a GAN architecture to generate synthetic renaissance style Image Data which can be used to improve OCR model performance on historical Spanish texts.This project is part of the HumanAI Foundation initiative and was developed during Google Summer of Code 2025.
+For Historical Manuscripts, limited availability of data is a limiting factor in training OCR or Layout Detection models. This project proposes a solution to this bottleneck by using a GAN architecture to generate synthetic renaissance style Image Data which can be used to improve OCR model performance on historical Spanish texts. This project is part of the HumanAI Foundation initiative and was developed during Google Summer of Code 2025.
 
 ## Table of Contents
 
 - [Overview](#overview)  
 - [Project Structure](#project-structure)  
-- [Requirements](#Requirements)  
+- [Requirements](#requirements)  
 - [Data Generation Pipeline](#data-generation-pipeline)  
   - Splitting Pages  
   - Image Preprocessing  
@@ -44,7 +44,7 @@ Historical OCR is challenged by scarce data and variable degradation in old manu
 ├── data_utils.py          # data-splitting, preprocessing, detection, mapping, dataset creation
 └── model_utils.py         # GAN model classes and training/inference helpers
 
-````
+```
 
 ---
 
@@ -57,13 +57,13 @@ Historical OCR is challenged by scarce data and variable degradation in old manu
 - numpy, pandas, matplotlib  
 - CRAFT text‑detection model weights (download per instructions in `src/data_utils.py`)  
 
-Downlaod the data and required model files from : [LINK](https://iitbhu365-my.sharepoint.com/:f:/g/personal/saarthak_gupta_mec22_iitbhu365_onmicrosoft_com/EtFan2TQidhNhTXXK45qTGwBAvyxOfpaJNxhSPWy16N0EA?e=fbdyuR)
+Download the data and required model files from : [LINK](https://iitbhu365-my.sharepoint.com/:f:/g/personal/saarthak_gupta_mec22_iitbhu365_onmicrosoft_com/EtFan2TQidhNhTXXK45qTGwBAvyxOfpaJNxhSPWy16N0EA?e=fbdyuR)
 
 Install with:
 
 ```bash
 pip install torch torchvision pillow numpy pandas matplotlib
-````
+```
 
 ---
 
@@ -100,7 +100,7 @@ All functions below are implemented in **`src/data_utils.py`** and demonstrated 
 ### 5. Dataset Creation
 
 * **`generate_text_image_dataset(...)`**
-  Renders each matched word in RomanAntique font (64×128), stacks 8 word images into a 256×256 grid, cleans and saves \~4,800 paired samples.
+  Renders each matched word in RomanAntique font (64×128), stacks 8 word images into a 256×256 grid, cleans and saves ~4,800 paired samples.
 
 ### 6. Grid Construction
 
