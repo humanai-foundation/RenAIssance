@@ -704,14 +704,28 @@ def process_book_with_transformations(book_directory, output_dir, transformation
         'upscale': upscale,
     }
     
-    # Handle both list and dictionary input formats
+    # Handle different transformation formats
+    # We support:
+    # 1) dict format (legacy)
+    # 2) list of transform names
+    # 3) ordered list of (transform, params) tuples
+
     if isinstance(transformations, dict):
-        transform_config = transformations
-        transform_order = list(transformations.keys())
+        # Convert dict into ordered list
+        transform_sequence = [(name, params) for name, params in transformations.items()]
+
+    elif isinstance(transformations, list):
+
+        if len(transformations) > 0 and isinstance(transformations[0], tuple):
+            # already in desired format
+            transform_sequence = transformations
+
+        else:
+            # simple list of transform names
+            transform_sequence = [(name, {}) for name in transformations]
+
     else:
-        # Convert list to dictionary with empty parameters
-        transform_config = {t: {} for t in transformations}
-        transform_order = transformations
+        raise ValueError("Unsupported transformation format provided")
     
     # Validate transformations
     invalid_transforms = [t for t in transform_order if t not in transform_functions]
@@ -767,9 +781,9 @@ def process_book_with_transformations(book_directory, output_dir, transformation
             current_image = load_image(image_path)
             
             # Apply transformations sequentially
-            for i, transform_name in enumerate(transform_order):
+            for i, (transform_name, transform_params) in enumerate(transform_sequence):
+
                 transform_func = transform_functions[transform_name]
-                transform_params = transform_config[transform_name]
                 
                 # Store reference to previous image for cleanup
                 if i > 0:

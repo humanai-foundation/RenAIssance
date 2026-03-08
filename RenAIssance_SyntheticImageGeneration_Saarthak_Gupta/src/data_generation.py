@@ -18,68 +18,81 @@ def data_generation_pipeline():
     copy_all_images()
 
     book_transformations = {
-        'book1': {
-            'denoise_image': {'method': 'bilateral'},
-            'denoise_image': {'method': 'nlm'}
-        },
-        'book2': {
-            'ensure_300ppi': {'target_dpi': 150},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'bilateral'},
-            'denoise_image': {'method': 'nlm'},
-            'denoise_image': {'method': 'nlm'}
-        },
-        'book3': {
-            'ensure_300ppi': {'target_dpi': 300},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'bilateral'}
-            },
-        'book4': {
-            'ensure_300ppi': {'target_dpi': 300},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'bilateral'}
-        },
-        'book5': {
-            'ensure_300ppi': {'target_dpi': 300}
-        },
-        'book6': {
-            'ensure_300ppi': {'target_dpi': 300},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'bilateral'}
-        },
-        'book7': {
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'nlm'},
-            'denoise_image': {'method': 'bilateral'}
-        },
-        'book8': {
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'nlm'},
-            'denoise_image': {'method': 'bilateral'}
-        },
-        'book9': {
-            'ensure_300ppi': {'target_dpi': 300},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'wiener'},
-            'sharpen_image': {'method': 'laplacian'}
-        },
-        'book10': {
-            'ensure_300ppi': {'target_dpi': 300},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'wiener'},
-            'sharpen_image': {'method': 'laplacian'}
-        },
-        'book11': {
-            'ensure_300ppi': {'target_dpi': 300},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'bilateral'},
-        },
-        'book12': {
-            'ensure_300ppi': {'target_dpi': 300},
-            'remove_bleed_dual_layer': {},
-            'denoise_image': {'method': 'bilateral'},
-            'sharpen_image': {'method': 'laplacian'},
-        },
+
+    'book1': [
+    ('denoise_image', {'method': 'bilateral'}),
+    ('denoise_image', {'method': 'nlm'})
+    ],
+
+    'book2': [
+    ('ensure_300ppi', {'target_dpi': 150}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'bilateral'}),
+    ('denoise_image', {'method': 'nlm'}),
+    ('denoise_image', {'method': 'nlm'})
+    ],
+
+    'book3': [
+    ('ensure_300ppi', {'target_dpi': 300}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'bilateral'})
+    ],
+
+    'book4': [
+    ('ensure_300ppi', {'target_dpi': 300}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'bilateral'})
+    ],
+
+    'book5': [
+    ('ensure_300ppi', {'target_dpi': 300})
+    ],
+
+    'book6': [
+    ('ensure_300ppi', {'target_dpi': 300}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'bilateral'})
+    ],
+
+    'book7': [
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'nlm'}),
+    ('denoise_image', {'method': 'bilateral'})
+    ],
+
+    'book8': [
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'nlm'}),
+    ('denoise_image', {'method': 'bilateral'})
+    ],
+
+    'book9': [
+    ('ensure_300ppi', {'target_dpi': 300}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'wiener'}),
+    ('sharpen_image', {'method': 'laplacian'})
+    ],
+
+    'book10': [
+    ('ensure_300ppi', {'target_dpi': 300}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'wiener'}),
+    ('sharpen_image', {'method': 'laplacian'})
+    ],
+
+    'book11': [
+    ('ensure_300ppi', {'target_dpi': 300}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'bilateral'})
+    ],
+
+    'book12': [
+    ('ensure_300ppi', {'target_dpi': 300}),
+    ('remove_bleed_dual_layer', {}),
+    ('denoise_image', {'method': 'bilateral'}),
+    ('sharpen_image', {'method': 'laplacian'})
+    ]
+
     }
 
     stats = process_multiple_books(
