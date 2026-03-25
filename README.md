@@ -2,7 +2,7 @@
 
 # RenAIssance
 
-The analysis of historical documents is critical yet costly in the Humanities. To reduce these costs, AI technology, specifically OCR (Optical Character Recognition), has started to be used. However, for many years, there was a lack of accurate OCR tools for Spanish documents from the Renaissance period, despite their academic importance.
+The analysis of historical documents is critical yet costly in the Humanities. To reduce these costs, AI technology, specifically OCR (Optical Character Recognition), is now being used. However, for many years, there was a lack of accurate OCR tools for Spanish documents from the Renaissance period, despite their academic importance.
 
 To address this issue, the HumanAI Foundation launched the **RenAIssance** project, where contributors develop accurate OCR models using various approaches.
 
@@ -30,6 +30,18 @@ To address these challenges, contributors have introduced various state-of-the-a
 3. **Self-Supervised Learning Approach**  
 
 All models, regardless of the approach used, achieve over 90% accuracy. For more detailed information on each approach, please refer to the contributors' repositories.
+
+## Benchmark Results
+
+The following table summarizes the performance of different OCR approaches used in the project:
+
+| Model                     | Approach                  | Accuracy (%) | Notes                          |
+|--------------------------|---------------------------|--------------|--------------------------------|
+| CRNN                     | CNN + RNN                 | 90+          | Baseline model                 |
+| Vision Transformer       | Transformer-based         | 90+          | Captures global context        |
+| Self-Supervised Model    | Self-supervised learning  | 90+          | Less labeled data required     |
+
+*Note: Exact accuracy may vary depending on dataset and training configuration.*
 
 ## Usage
 
