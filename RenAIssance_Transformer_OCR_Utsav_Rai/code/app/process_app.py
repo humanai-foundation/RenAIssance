@@ -4,10 +4,9 @@ import cv2
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog, Canvas, ttk, Scrollbar, IntVar, BooleanVar, HORIZONTAL, Scale, Spinbox
-from deskew import determine_skew
 import platform
-import math
 import os
+from shared_app_utils import deskew_image, preprocess_image, remove_borders, rotate
 
 # Global variables
 current_page = 0
@@ -87,91 +86,6 @@ def create_custom_slider(root, label_text, variable, from_, to, resolution, comm
 
     # Initial update
     update_slider()
-
-# Function to rotate an image by a given angle
-def rotate(image: np.ndarray, angle: float, background: tuple) -> np.ndarray:
-    old_height, old_width = image.shape[:2]
-    angle_radian = math.radians(angle)
-    width = abs(np.sin(angle_radian) * old_height) + abs(np.cos(angle_radian) * old_width)
-    height = abs(np.sin(angle_radian) * old_width) + abs(np.cos(angle_radian) * old_height)
-
-    image_center = tuple(np.array(image.shape[1::-1]) / 2)
-    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-    rot_mat[1, 2] += (width - old_width) / 2
-    rot_mat[0, 2] += (height - old_height) / 2
-    return cv2.warpAffine(image, rot_mat, (int(round(width)), int(round(height))), borderValue=background)
-
-# Function to deskew an image
-def deskew_image(image: np.ndarray) -> np.ndarray:
-    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    angle = determine_skew(grayscale)
-    if angle is not None:
-        rotated = rotate(image, angle, (0, 0, 0))
-        return rotated
-    else:
-        return image
-
-# Function to preprocess an image by removing noise and adjusting intensity
-def preprocess_image(image: np.ndarray, noise_removal_area_threshold: int, intensity_threshold: int) -> np.ndarray:
-    # Ensure the image is in the correct format
-    if len(image.shape) == 3 and image.shape[2] == 3:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    else:
-        gray = image  # If already grayscale
-
-    thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 25)
-
-    kernel = np.ones((2, 2), np.uint8)
-    opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-    closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
-
-    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(closed, connectivity=8)
-    sizes = stats[1:, -1]
-    new_image = np.zeros((labels.shape), np.uint8)
-
-    # Apply component filtering based on size and intensity thresholds
-    for i in range(1, num_labels):
-        component_mask = (labels == i)
-        component_intensity = np.mean(gray[component_mask])
-        if sizes[i - 1] >= noise_removal_area_threshold and component_intensity <= intensity_threshold:
-            new_image[component_mask] = 255
-
-    inverted_image = cv2.bitwise_not(new_image)
-    bordered = cv2.copyMakeBorder(inverted_image, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=[255, 255, 255])
-    return bordered
-
-# Function to remove borders from an image
-def remove_borders(image: np.ndarray) -> np.ndarray:
-    if len(image.shape) == 3 and image.shape[2] == 3:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    else:
-        gray = image  # If already grayscale
-
-    img_inverted = cv2.bitwise_not(gray)
-    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 1))
-    detected_horizontal = cv2.morphologyEx(img_inverted, cv2.MORPH_OPEN, horizontal_kernel)
-
-    vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 100))
-    detected_vertical = cv2.morphologyEx(img_inverted, cv2.MORPH_OPEN, vertical_kernel)
-
-    detected_lines = cv2.addWeighted(detected_horizontal, 1.0, detected_vertical, 1.0, 0.0)
-    dilated_lines = cv2.dilate(detected_lines, np.ones((1, 1), np.uint8), iterations=2)
-    closed_lines = cv2.morphologyEx(dilated_lines, cv2.MORPH_CLOSE, np.ones((10, 10), np.uint8))
-
-    _, binary_lines = cv2.threshold(closed_lines, 127, 255, cv2.THRESH_BINARY)
-    lines = cv2.HoughLinesP(binary_lines, 1, np.pi / 180, threshold=100, minLineLength=100, maxLineGap=10)
-
-    mask = np.zeros_like(gray)
-    if lines is not None:
-        for line in lines:
-            for x1, y1, x2, y2 in line:
-                cv2.line(mask, (x1, y1), (x2, y2), 255, 10)
-
-    dilated_mask = cv2.dilate(mask, np.ones((1, 1), np.uint8), iterations=2)
-    img_result = gray.copy()
-    img_result[dilated_mask == 255] = 255
-
-    return img_result
 
 # Function to process a single page of the PDF
 def process_page():
