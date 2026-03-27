@@ -129,7 +129,7 @@ def create_custom_slider(root, label_text, variable, from_, to, resolution, comm
 
 # Function to rotate an image by a given angle
 def rotate(image: np.ndarray, angle: float, background: tuple) -> np.ndarray:
-    old_width, old_height = image.shape[:2]
+    old_height, old_width = image.shape[:2]
     angle_radian = math.radians(angle)
     width = abs(np.sin(angle_radian) * old_height) + abs(np.cos(angle_radian) * old_width)
     height = abs(np.sin(angle_radian) * old_width) + abs(np.cos(angle_radian) * old_height)
@@ -138,7 +138,7 @@ def rotate(image: np.ndarray, angle: float, background: tuple) -> np.ndarray:
     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
     rot_mat[1, 2] += (width - old_width) / 2
     rot_mat[0, 2] += (height - old_height) / 2
-    return cv2.warpAffine(image, rot_mat, (int(round(height)), int(round(width))), borderValue=background)
+    return cv2.warpAffine(image, rot_mat, (int(round(width)), int(round(height))), borderValue=background)
 
 # Function to deskew an image
 def deskew_image(image: np.ndarray) -> np.ndarray:
