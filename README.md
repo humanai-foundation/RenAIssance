@@ -33,6 +33,8 @@ All models, regardless of the approach used, achieve over 90% accuracy. For more
 
 ## Benchmark Results
 
+
+
 The following table summarizes the performance of different OCR approaches used in the project:
 
 | Model                     | Approach                  | Accuracy (%) | Notes                          |
