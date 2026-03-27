@@ -4,7 +4,7 @@ from torchvision import transforms
 from torchvision.transforms import functional as F
 from torchvision.transforms import RandomApply, GaussianBlur, Resize, Compose, ToTensor, Lambda, RandomPerspective, \
     RandomAffine, RandomRotation, Grayscale
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import os
 import numpy as np
 import random
@@ -21,6 +21,14 @@ class RandomVerticalCrop:
         start = random.randint(0, crop_height // 2)
         end = height - random.randint(0, crop_height // 2)
         return img.crop((0, start, width, end))
+
+
+def load_rgb_image(image_path):
+    try:
+        with Image.open(image_path) as img:
+            return img.convert("RGB")
+    except (OSError, UnidentifiedImageError) as exc:
+        raise RuntimeError(f"Failed to load image '{image_path}'") from exc
 
 
 def resize_and_pad(img, target_size):
@@ -88,10 +96,7 @@ class ContrastiveLearningDataset(Dataset):
         return len(self.filepaths)
 
     def __getitem__(self, idx):
-        try:
-            img = Image.open(self.filepaths[idx])
-        except IOError:
-            return "cannot identify image file '%s'", self.filepaths[idx]
+        img = load_rgb_image(self.filepaths[idx])
         original = self.original_transform(img)
         augmented = self.augmented_transform(img)
         return {"original": original, "augmented": augmented}
@@ -120,7 +125,8 @@ class DecoderDataset(Dataset):
 
     def __getitem__(self, index):
         img_name = self.annotations.iloc[index, 1]
-        image = Image.open(os.path.join(self.img_dir, img_name))  # Use PIL to read the image
+        image_path = os.path.join(self.img_dir, img_name)
+        image = load_rgb_image(image_path)
         image = self.transform(image)  # Image is in CHW format now
 
         label = self.annotations.iloc[index, 0]
