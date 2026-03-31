@@ -1,2 +1,19 @@
 RenAIssance_Transformer_OCR_Utsav_Rai/weights
 RenAIssance_Transformer_OCR_Utsav_Rai/models
+
+# Virtual environment
+renaissance_env/
+
+# VS Code
+.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Large outputs (optional)
+*.png
+*.jpg
+
+# OS files
+.DS_Store
