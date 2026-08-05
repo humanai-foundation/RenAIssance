@@ -1,0 +1,72 @@
+=== OCR_CONFUSION EXAMPLES ===
+aaaah -> aaáah
+ababa -> abába
+ababol -> abábol
+abadiato -> ábadiato
+abadiato -> abadiafo
+abalanzar -> abálanzar
+abalanzar -> abalañzar
+abalear -> abaleár
+abalear -> abátcar
+aballestar -> áballeftar
+
+=== HISTORICAL EXAMPLES ===
+aaaah -> aaaaf
+aaah -> aaaf
+abajamiento -> abaxamiento
+abajar -> abaxar
+abajeño -> abaxeño
+abajeño -> abaieno
+abakuá -> abakvá
+aballar -> abayar
+abaluartar -> abalvartar
+abanderamiento -> abandéramjénto
+
+=== TYPO EXAMPLES ===
+aaah -> aaahh
+aang -> aaang
+aaron -> aaton
+aarón -> arón
+ababol -> aabol
+abacero -> abscero
+abacero -> abacwro
+abacial -> abaxial
+abad -> absd
+abada -> abaad
+
+=== PHONETIC EXAMPLES ===
+aang -> aanj
+abacá -> avacá
+abada -> avada
+abadengo -> avadengo
+abajar -> avajar
+abalconado -> avalconado
+aballar -> avallar
+abanar -> avanar
+abancalar -> abanzalar
+abanderado -> avanderado
+
+=== DIACRITIC EXAMPLES ===
+aarón -> aaron
+ababa -> ábaba
+abacería -> abaceria
+abacá -> ábacá
+abadejo -> abadejó
+abadengo -> ábadengo
+abadernar -> abadérnar
+abadí -> abadi
+abadí -> abadi
+abadía -> abadia
+
+=== MERGE_SPLIT EXAMPLES ===
+abacería -> abace
+abacial -> abaci
+abajamiento -> alabajamiento
+abaldonar -> unabaldonar
+abaluartar -> elabaluartar
+abanador -> abanado
+abandona -> aband
+abandona -> abando
+abandonaba -> deabandonaba
+abandonadamente -> abandonadame
+

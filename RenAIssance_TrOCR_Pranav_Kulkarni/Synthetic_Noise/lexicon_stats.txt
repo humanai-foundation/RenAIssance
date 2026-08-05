@@ -1,0 +1,11 @@
+Spanish Lexicon Statistics
+==============================
+
+Total unique words: 87022
+Words from Hunspell: 55053
+Words from Wiktionary: 0
+Words from wordfreq: 47495
+Words with frequency data: 47495
+Average word length: 8.4
+Min word length: 4
+Max word length: 22

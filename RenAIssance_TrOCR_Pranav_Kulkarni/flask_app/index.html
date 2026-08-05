@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrOCR Image Annotation & Correction Tool</title>
+    <!-- Fabric.js library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    ...
+    <style>
+        :root {
+            --bg-main: #f7f8fa;
+            --bg-panel: #f3f0fa;
+            --bg-panel-alt: #eaf1fb;
+            --bg-toolbar: #ede7f6;
+            --bg-section: #f6f7fb;
+            --bg-accent: #e0e7ff;
+            --bg-highlight: #e3e0f7;
+            --bg-white: #fff;
+            --bg-offwhite: #f9f9fb;
+
+            --purple-deep: #6c3fc5;
+            --purple-main: #8f5ee3;
+            --purple-pastel: #bba6e8;
+            --purple-light: #e3d8fa;
+            --purple-dark: #4b2769;
+
+            --blue-main: #5bb6f9;
+            --blue-light: #e6f2fd;
+            --blue-accent: #b3e0ff;
+            --blue-dark: #2a4d69;
+
+            --gray-dark: #23272f;
+            --gray-main: #444857;
+            --gray-light: #bfc4d1;
+
+            --success: #a3e635;
+            --warning: #ffe066;
+            --danger: #ff6b6b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-main);
+            min-height: 100vh;
+            font-size: 18px;
+            color: var(--gray-dark);
+        }
+
+        .container {
+            width: 100%;
+            margin: 0;
+            background: var(--bg-white);
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--purple-deep);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 3em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px var(--purple-light);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            align-items: start;
+            margin-bottom: 30px;
+            gap: 30px;
+        }
+
+        .image-panel, .inference-panel {
+            width: 100%;
+            background: var(--bg-panel);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid var(--purple-pastel);
+            position: relative;
+            box-shadow: 0 2px 12px 0 var(--bg-highlight);
+        }
+
+        .inference-panel {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 140px);
+            overflow: auto;
+        }
+
+        .inference-panel::before {
+            content: "↓ Scroll down for OCR Results";
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--purple-main);
+            color: var(--bg-white);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0.92;
+            pointer-events: none;
+            animation: bounce 2s infinite;
+            z-index: 10;
+            box-shadow: 0 2px 8px var(--purple-light);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-5px); }
+            60% { transform: translateX(-50%) translateY(-3px); }
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(90deg, var(--purple-main), var(--blue-main));
+            color: var(--bg-white);
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(140, 90, 230, 0.18);
+            z-index: 1000;
+            display: none;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .scroll-indicator:hover {
+            background: linear-gradient(90deg, var(--purple-deep), var(--blue-dark));
+            transform: translateY(-2px) scale(1.04);
+        }
+
+        .image-panel h3, .inference-panel h3 {
+            margin-top: 0;
+            color: var(--purple-deep);
+            border-bottom: 2px solid var(--purple-main);
+            padding-bottom: 10px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--bg-toolbar);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px var(--bg-highlight);
+        }
+
+        .upload-section {
+            background: var(--blue-light);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px dashed var(--blue-main);
+        }
+
+        .canvas-container {
+            border: 2px solid var(--purple-pastel);
+            margin: 10px 0;
+            display: block;
+            position: relative;
+            background: var(--bg-white);
+            border-radius: 10px;
+            overflow: hidden;
+            width: 100%;
+            text-align: center;
+        }
+
+        .inference-container {
+            background: var(--bg-white);
+            border: 2px solid var(--purple-pastel);
+            border-radius: 10px;
+            padding: 15px;
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        .text-section label {
+            color: var(--purple-main);
+        }
+
+        .text-section textarea,
+        .line-segment-text {
+            background: var(--bg-offwhite);
+            border: 1.5px solid var(--purple-light);
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: var(--gray-dark);
+            padding: 12px;
+            resize: vertical;
+        }
+
+        .original-text,
+        #originalTextDisplay {
+            background: var(--warning);
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
+        .corrected-text,
+        #correctedText {
+            background: var(--success);
+            border: 2px solid #c3e6cb;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 28px;
+            color: #155724;
+            padding: 28px 24px;
+            min-height: 180px;
+            outline: none;
+            white-space: pre-wrap;
+            box-shadow: 0 2px 10px rgba(163,230,53,0.08);
+            margin-bottom: 0;
+            resize: none;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--bg-section);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        select, input, button {
+            padding: 12px 18px;
+            border: 1px solid var(--purple-light);
+            border-radius: 7px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            background: linear-gradient(90deg, var(--purple-main), var(--blue-main));
+            color: var(--bg-white);
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            box-shadow: 0 2px 8px var(--bg-highlight);
+        }
+        button:hover {
+            background: linear-gradient(90deg, var(--purple-deep), var(--blue-dark));
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 5px 18px var(--purple-light);
+        }
+        button:disabled {
+            background: #bfc4d1;
+            color: #fff;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(90deg, #7ed957, #b3e635);
+            color: #23272f;
+        }
+        .btn-success:hover {
+            background: linear-gradient(90deg, #a3e635, #7ed957);
+            color: #23272f;
+        }
+        .btn-danger {
+            background: linear-gradient(90deg, #ff6b6b, #ffb3b3);
+            color: #23272f;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #ffb3b3, #ff6b6b);
+            color: #23272f;
+        }
+        .btn-warning {
+            background: linear-gradient(90deg, #ffe066, #fff3cd);
+            color: #23272f;
+        }
+
+        .spanish-chars button {
+            min-width: 45px;
+            height: 45px;
+            background: linear-gradient(90deg, var(--purple-main), var(--blue-main));
+            font-size: 18px;
+            font-weight: bold;
+            margin: 2px;
+            color: var(--bg-white);
+            border: none;
+        }
+        .spanish-chars button:hover {
+            background: linear-gradient(90deg, var(--purple-deep), var(--blue-dark));
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+        .status.success {
+            background-color: #e6f9e6;
+            color: #155724;
+            border: 2px solid #b3e635;
+        }
+        .status.error {
+            background-color: #fbeaea;
+            color: #721c24;
+            border: 2px solid #ff6b6b;
+        }
+
+        .current-image {
+            font-weight: bold;
+            color: var(--purple-main);
+            background: var(--bg-white);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 2px solid var(--purple-main);
+        }
+
+        .image-split-controls {
+            display: flex;
+            align-items: center;
+            background: var(--bg-accent);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--blue-main);
+            font-size: 14px;
+        }
+        .split-indicator {
+            background: var(--purple-main);
+            color: var(--bg-white);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+            display: none;
+        }
+
+        .loading-indicator {
+            background: var(--blue-main);
+            color: var(--bg-white);
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, var(--purple-main), var(--blue-main));
+            color: var(--bg-white);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .file-label:hover {
+            background: linear-gradient(90deg, var(--purple-deep), var(--blue-dark));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--purple-light);
+        }
+
+        .inference-stats {
+            background: var(--bg-accent);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            color: var(--purple-main);
+        }
+
+        .debug-section {
+            background: var(--bg-highlight);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid var(--purple-light);
+        }
+
+        .line-segments-panel {
+            background: var(--bg-panel-alt);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid var(--blue-accent);
+            margin-top: 20px;
+        }
+        .line-segments-panel h3 {
+            margin-top: 0;
+            color: var(--blue-dark);
+            border-bottom: 2px solid var(--blue-main);
+            padding-bottom: 10px;
+        }
+        .line-segments-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid var(--blue-accent);
+            border-radius: 6px;
+            background: var(--bg-white);
+            padding: 15px;
+        }
+        .line-segment-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid var(--purple-light);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background: var(--bg-section);
+            align-items: flex-start;
+        }
+        .line-segment-item:last-child {
+            margin-bottom: 0;
+        }
+        .line-segment-image {
+            flex-shrink: 0;
+            width: 320px;
+            height: 130px;
+            border: 1px solid var(--blue-accent);
+            border-radius: 4px;
+            background: var(--bg-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--gray-main);
+            overflow: hidden;
+        }
+        .line-segment-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .line-segment-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .line-segment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--blue-accent);
+        }
+        .line-segment-index {
+            font-weight: bold;
+            color: var(--purple-main);
+            font-size: 16px;
+            background: var(--bg-accent);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .line-segment-confidence {
+            font-size: 12px;
+            color: var(--blue-dark);
+            background: var(--bg-panel-alt);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .line-segment-text {
+            width: 100%;
+            min-height: 80px;
+            padding: 15px;
+            border: 2px solid var(--purple-light);
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            resize: vertical;
+            background: var(--bg-white);
+            margin-bottom: 8px;
+        }
+        .line-segment-text:focus {
+            border-color: var(--purple-main);
+            outline: none;
+            box-shadow: 0 0 0 2px var(--purple-light);
+        }
+        .line-segment-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .line-segment-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-width: auto;
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab-button {
+            padding: 8px 16px;
+            background: var(--bg-accent);
+            border: 1px solid var(--purple-light);
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--purple-main);
+        }
+        .tab-button.active {
+            background: var(--purple-main);
+            color: var(--bg-white);
+            border-color: var(--purple-main);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .ocr-results-section {
+            margin-top: 30px;
+            background: var(--bg-section);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid var(--purple-pastel);
+        }
+        .ocr-results-section h2 {
+            color: var(--purple-main);
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8em;
+            border-bottom: 3px solid var(--purple-main);
+            padding-bottom: 10px;
+        }
+        .full-text-section {
+            background: var(--bg-white);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid var(--blue-accent);
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px var(--bg-highlight);
+        }
+        .full-text-section h3 {
+            color: var(--purple-main);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--success);
+            padding-bottom: 8px;
+        }
+        .text-zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .text-zoom-controls button {
+            padding: 6px 10px;
+            font-size: 14px;
+        }
+        .full-text-content {
+            background: var(--bg-panel-alt);
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--blue-accent);
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        #originalTextDisplay {
+            background: var(--warning);
+            padding: 28px 24px;
+            border-radius: 8px;
+            border: 2px solid #ffeaa7;
+            font-family: 'Courier New', monospace;
+            font-size: 28px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            min-height: 180px;
+            color: #856404;
+            box-shadow: 0 2px 10px rgba(255,193,7,0.08);
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+
+
+</head>
+<body>
+    <div class="container">
+        <h1>TrOCR Image Annotation & Correction Tool</h1>
+        
+        <div class="upload-section">
+            <label for="fileInput" class="file-label">
+                📁 Upload Image or PDF for OCR Processing
+            </label>
+            <input type="file" id="fileInput" name="file" class="file-input" accept="image/*,.pdf" />
+            <p style="margin: 10px 0 0 0; color: #666;">
+                Supported formats: JPG, PNG, PDF, TIFF, BMP (Max 16MB)
+            </p>
+            <div class="loading-indicator" id="loadingIndicator">
+                🔄 Processing image... Please wait
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h4>Debug Upload Test:</h4>
+            <form id="debugForm" enctype="multipart/form-data">
+                <input type="file" name="file" accept="image/*" id="debugFileInput">
+                <button type="button" onclick="debugUpload()">Upload Test</button>
+            </form>
+        </div>
+        
+        <div class="toolbar">
+            <button id="drawModeBtn">🖊️ Draw Mode</button>
+            <button id="selectModeBtn">👆 Select Mode</button>
+            <button id="deleteBoxBtn" disabled>🗑️ Delete Selected Box</button>
+            <button id="rerunInferenceBtn" class="btn-warning">🔄 Re-run OCR</button>
+            <div class="image-split-controls">
+                <label for="splitImageToggle" style="margin-right: 10px; font-weight: bold;">Split Image:</label>
+                <input type="checkbox" id="splitImageToggle" style="transform: scale(1.5); margin-right: 10px;">
+                <span>Process left half first, then right half</span>
+                <div class="split-indicator" id="splitIndicator">SPLIT MODE</div>
+            </div>
+            <div class="current-image" id="currentImageName">No image loaded</div>
+            <div id="pdfControls" style="display:none; gap:8px; align-items:center;">
+                <button id="prevPageBtn">⬅️ Prev Page</button>
+                <span id="pageIndicator">Page 1 / 1</span>
+                <button id="nextPageBtn">Next Page ➡️</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="image-panel">
+                <h3>📷 Image & Annotations</h3>
+                <div class="canvas-container">
+                    <canvas id="annotationCanvas" width="600" height="400"></canvas>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <div>
+                        <label for="errorType">Error Type:</label>
+                        <select id="errorType">
+                            <option value="spelling">Spelling</option>
+                            <option value="grammar">Grammar</option>
+                            <option value="spacing">Spacing</option>
+                            <option value="formatting">Formatting</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <label for="textInput">Annotation Text:</label>
+                        <input type="text" id="textInput" placeholder="Enter text for annotation">
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <label>Spanish Characters (click to insert into focused text field):</label>
+                        <div class="spanish-chars">
+                            <button type="button" onclick="insertSpanishChar('ñ')">ñ</button>
+                            <button type="button" onclick="insertSpanishChar('á')">á</button>
+                            <button type="button" onclick="insertSpanishChar('é')">é</button>
+                            <button type="button" onclick="insertSpanishChar('í')">í</button>
+                            <button type="button" onclick="insertSpanishChar('ó')">ó</button>
+                            <button type="button" onclick="insertSpanishChar('ú')">ú</button>
+                            <button type="button" onclick="insertSpanishChar('ü')">ü</button>
+                            <button type="button" onclick="insertSpanishChar('¿')">¿</button>
+                            <button type="button" onclick="insertSpanishChar('¡')">¡</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="inference-panel">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" onclick="switchTab('full-text')">Full Text</button>
+                        <button class="tab-button" onclick="switchTab('line-segments')">Line Segments</button>
+                    </div>
+                    
+                    <div id="full-text-tab" class="tab-content active">
+                        <div class="ocr-results-section">
+                            <h2>🤖 Full Text OCR Results</h2>
+                            <div class="full-text-section">
+                                <h3>📄 Original OCR Output</h3>
+                                <div class="full-text-content" id="originalTextContent">
+                                    <div id="originalTextDisplay">No OCR data available</div>
+                                </div>
+                            </div>
+                            <div class="full-text-section">
+                                <h3>✏️ Corrected Text</h3>
+                                <div class="text-zoom-controls">
+                                    <span>Zoom:</span>
+                                    <button type="button" id="decreaseTextZoom">A-</button>
+                                    <button type="button" id="increaseTextZoom">A+</button>
+                                </div>
+                                    <div class="full-text-content" id="correctedTextContent">
+                                        <div id="correctedText" class="corrected-text" contenteditable="true" spellcheck="true" style="min-height: 180px;"></div>
+                                    </div>
+                            </div>
+                            <div class="section-actions">
+                                <button id="saveCorrectionBtn" class="btn-success">💾 Save Correction</button>
+                                <button id="resetCorrectionBtn" class="btn-warning">↩️ Reset to Original</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="line-segments-tab" class="tab-content">
+                        <div class="ocr-results-section">
+                            <h2>📝 Line-by-Line OCR Results</h2>
+                            <div class="line-segments-section">
+                                <h3>🔍 Individual Line Segments</h3>
+                                <div class="inference-stats" id="lineSegmentsStats">
+                                    No line segments available
+                                </div>
+                                <div class="line-segments-container" id="lineSegmentsContainer">
+                                    <div style="padding: 20px; text-align: center; color: #666;">
+                                        Upload an image to see line segments and OCR results
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="section-actions">
+                                <button id="saveAllLinesBtn" class="btn-success">💾 Save All Line Corrections</button>
+                                <button id="resetAllLinesBtn" class="btn-warning">↩️ Reset All Lines</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="nextImageBtn">▶️ Next Image</button>
+            <button id="saveAnnotationsBtn" class="btn-success">💾 Save Annotations</button>
+            <button id="clearAllBtn" class="btn-danger">🗑️ Clear All Boxes</button>
+        </div>
+        
+        <div class="status" id="statusMessage"></div>
+        
+        <div class="scroll-indicator" id="scrollIndicator" onclick="scrollToOCRResults()">
+            📄 View OCR Results ↓
+        </div>
+    </div>
+
+    <script>
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('annotationCanvas');
+        
+        // Global variables
+        let currentImageName = '';
+        let isDrawing = false;
+        let startX, startY;
+        let currentRect = null;
+        let drawMode = true;
+        let currentInferenceData = null;
+        let currentLineSegments = [];
+        let isImageSplit = false;
+        let splitResults = { left: null, right: null };
+        let isPdf = false;
+        let pdfPages = [];
+        let currentPageIndex = 0;
+        
+        // Canvas settings
+        canvas.selection = false;
+        // Increase default canvas size for better visibility
+        canvas.setDimensions({ width: 1400, height: 950 });
+        
+        // Initialize the application
+        function init() {
+            setupEventListeners();
+            loadFirstImage();
+            updateModeButtons();
+        }
+        
+        function setupEventListeners() {
+            // File upload
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            
+            // Mode buttons
+            document.getElementById('drawModeBtn').addEventListener('click', () => setDrawMode(true));
+            document.getElementById('selectModeBtn').addEventListener('click', () => setDrawMode(false));
+            
+            // Control buttons
+            document.getElementById('deleteBoxBtn').addEventListener('click', deleteSelectedBox);
+            document.getElementById('nextImageBtn').addEventListener('click', loadNextImage);
+            document.getElementById('saveAnnotationsBtn').addEventListener('click', saveAnnotations);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllBoxes);
+            document.getElementById('rerunInferenceBtn').addEventListener('click', rerunInference);
+            
+            // Inference controls
+            document.getElementById('saveCorrectionBtn').addEventListener('click', saveCorrection);
+            document.getElementById('resetCorrectionBtn').addEventListener('click', resetCorrection);
+            
+            // Line segment controls
+            document.getElementById('saveAllLinesBtn').addEventListener('click', saveAllLineCorrections);
+            document.getElementById('resetAllLinesBtn').addEventListener('click', resetAllLineCorrections);
+            
+            // Image split toggle
+            document.getElementById('splitImageToggle').addEventListener('change', function() {
+                isImageSplit = this.checked;
+                const indicator = document.getElementById('splitIndicator');
+                if (isImageSplit) {
+                    indicator.style.display = 'inline-block';
+                } else {
+                    indicator.style.display = 'none';
+                }
+                console.log('Image split mode:', isImageSplit);
+            });
+            
+            // Canvas events
+            canvas.on('mouse:down', onMouseDown);
+            canvas.on('mouse:move', onMouseMove);
+            canvas.on('mouse:up', onMouseUp);
+            canvas.on('selection:created', onSelectionCreated);
+            canvas.on('selection:updated', onSelectionUpdated);
+            canvas.on('selection:cleared', onSelectionCleared);
+            
+            // Form events
+            document.getElementById('errorType').addEventListener('change', updateSelectedBoxErrorType);
+            document.getElementById('textInput').addEventListener('input', updateSelectedBoxText);
+        }
+        
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+        
+        async function handleFileUpload(event) {
+            console.log("🔔 handleFileUpload fired", event);
+            const file = event.target.files[0];
+            console.log("  selected file:", file);
+            if (!file) return;
+            // If it's an image (not PDF) and split not selected, offer to split when very wide
+            if (!isImageSplit && file.type && file.type.startsWith('image/')) {
+                try {
+                    const dims = await getImageDimensions(file);
+                    if (dims && dims.width / Math.max(1, dims.height) >= 1.25) {
+                        const wantSplit = confirm('This image looks like a two-page scan. Split into left and right pages?');
+                        isImageSplit = wantSplit;
+                        document.getElementById('splitImageToggle').checked = wantSplit;
+                        document.getElementById('splitIndicator').style.display = wantSplit ? 'inline-block' : 'none';
+                    }
+                } catch (e) {
+                    console.log('Dimension check failed, continuing without prompt', e);
+                }
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('split_image', isImageSplit);
+            
+            // Show loading indicator
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.style.display = 'block';
+            
+            const statusMessage = isImageSplit ? 'Uploading and processing image in split mode...' : 'Uploading and processing file...';
+            showStatus(statusMessage, 'success');
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                
+                if (data.success) {
+                    // Handle PDF response
+                    if (data.is_pdf) {
+                        isPdf = true;
+                        pdfPages = data.page_filenames || [];
+                        currentPageIndex = 0;
+                        currentImageName = data.first_page || '';
+                        togglePdfControls(true, data.total_pages || pdfPages.length);
+                    } else {
+                        isPdf = false;
+                        pdfPages = [];
+                        currentImageName = data.filename;
+                        togglePdfControls(false, 0);
+                        currentLineSegments = data.line_segments || [];
+                    }
+                    loadCurrentImage();
+                    loadInferenceData();
+                    updateImageName();
+
+                    if (data.split_processing) {
+                        showStatus(`File uploaded successfully! Split processing completed. Left: ${data.left_lines} lines, Right: ${data.right_lines} lines.`, 'success');
+                        // If split, allow quick navigation between halves
+                        if (!isPdf && data.left_image && data.right_image) {
+                            isPdf = true; // reuse page nav UI for halves
+                            pdfPages = [data.left_image, data.right_image];
+                            currentPageIndex = 0;
+                            currentImageName = data.left_image;
+                            togglePdfControls(true, pdfPages.length);
+                        }
+                    } else if (data.is_pdf) {
+                        showStatus(`PDF uploaded successfully! Rendered ${data.total_pages} pages. Processing results can be viewed page-by-page.`, 'success');
+                    } else {
+                        showStatus(`File uploaded successfully! OCR completed with ${data.total_lines} line segments.`, 'success');
+                    }
+                } else {
+                    showStatus(`Upload failed: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                console.error('Upload error:', error);
+                showStatus('Upload failed. Please try again.', 'error');
+            });
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function getImageDimensions(file) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const img = new Image();
+                        img.onload = () => resolve({ width: img.width, height: img.height });
+                        img.onerror = reject;
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+        
+        // Debug upload function
+        function debugUpload() {
+            const fileInput = document.getElementById('debugFileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file first');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('split_image', isImageSplit);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Debug upload response:', data);
+                if (data.success) {
+                    alert(`Upload successful!\nFilename: ${data.filename}\nOCR: ${data.inference}\nLine segments: ${data.total_lines}`);
+                    // Also update the main interface
+                    currentImageName = data.filename;
+                    currentLineSegments = data.line_segments || [];
+                    loadCurrentImage();
+                    loadInferenceData();
+                    updateImageName();
+                } else {
+                    alert(`Upload failed: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Debug upload error:', error);
+                alert('Upload failed. Check console for details.');
+            });
+        }
+        
+        function loadInferenceData() {
+            if (!currentImageName) return;
+            
+            fetch(`/get_inference/${currentImageName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('originalTextDisplay').textContent = 'No OCR data available';
+                        document.getElementById('correctedText').value = '';
+                        document.getElementById('lineSegmentsContainer').innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No line segments available</div>';
+                        document.getElementById('lineSegmentsStats').textContent = 'No line segments available';
+                    } else {
+                        currentInferenceData = data;
+                        
+                        // Display combined full text
+                        const fullText = data.original_text || '';
+                        document.getElementById('originalTextDisplay').textContent = fullText;
+                        document.getElementById('correctedText').innerText = data.corrected_text || fullText;                        
+                        // Update line segments
+                        if (data.line_segments && data.line_segments.length > 0) {
+                            currentLineSegments = data.line_segments;
+                            updateLineSegmentsDisplay();
+                            document.getElementById('lineSegmentsStats').textContent = `Found ${data.total_lines} line segments`;
+                        } else {
+                            document.getElementById('lineSegmentsStats').textContent = 'No line segments available';
+                            document.getElementById('lineSegmentsContainer').innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No line segments available</div>';
+                        }
+                        // Update PDF page indicator
+                        if (isPdf && typeof data.page_index === 'number' && typeof data.total_pages === 'number') {
+                            currentPageIndex = data.page_index;
+                            updatePageIndicator(data.page_index, data.total_pages);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading inference:', error);
+                });
+        }
+        
+        function updateLineSegmentsDisplay() {
+            const container = document.getElementById('lineSegmentsContainer');
+            
+            if (!currentLineSegments || currentLineSegments.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No line segments available</div>';
+                return;
+            }
+            
+            let html = '';
+            currentLineSegments.forEach((segment, index) => {
+                html += `
+                    <div class="line-segment-item" data-line-index="${segment.line_index}">
+                        <div class="line-segment-image">
+                            <img src="/line_segment/${segment.image_filename}" alt="Line ${segment.line_index}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <span style="display: none;">Line ${segment.line_index}</span>
+                        </div>
+                        <div class="line-segment-content">
+                            <div class="line-segment-header">
+                                <span class="line-segment-index">Line ${segment.line_index}</span>
+                                <span class="line-segment-confidence">Confidence: ${(segment.confidence * 100).toFixed(1)}%</span>
+                            </div>
+                            <textarea class="line-segment-text" data-line-index="${segment.line_index}" placeholder="OCR text will appear here...">${segment.ocr_text || ''}</textarea>
+                            <div class="line-segment-actions">
+                                <button onclick="saveLineCorrection(${segment.line_index})" class="btn-success">Save</button>
+                                <button onclick="resetLineCorrection(${segment.line_index})" class="btn-warning">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Update the full text display with combined line segments
+            updateFullTextFromSegments();
+        }
+        
+        function updateFullTextFromSegments() {
+            if (currentLineSegments && currentLineSegments.length > 0) {
+                const combinedText = currentLineSegments
+                    .sort((a, b) => a.line_index - b.line_index)
+                    .map(segment => segment.ocr_text || '')
+                    .join('\n');
+                
+                document.getElementById('originalTextDisplay').textContent = combinedText;
+                
+                // Also update the corrected text if it's empty or hasn't been modified
+                const correctedText = document.getElementById('correctedText');
+                if (!correctedText.value || correctedText.value === '') {
+                    correctedText.value = combinedText;
+                }
+            }
+        }
+        
+        function saveLineCorrection(lineIndex) {
+            const textarea = document.querySelector(`textarea[data-line-index="${lineIndex}"]`);
+            const correctedText = textarea.value;
+            
+            fetch('/update_line_ocr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image: currentImageName,
+                    line_index: lineIndex,
+                    corrected_text: correctedText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus(`Line ${lineIndex} correction saved!`, 'success');
+                    // Update the segment in memory
+                    const segment = currentLineSegments.find(s => s.line_index === lineIndex);
+                    if (segment) {
+                        segment.ocr_text = correctedText;
+                    }
+                } else {
+                    showStatus(`Error saving line ${lineIndex}: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving line correction:', error);
+                showStatus('Error saving line correction', 'error');
+            });
+        }
+        
+        function resetLineCorrection(lineIndex) {
+            const textarea = document.querySelector(`textarea[data-line-index="${lineIndex}"]`);
+            const segment = currentLineSegments.find(s => s.line_index === lineIndex);
+            if (segment) {
+                textarea.value = segment.ocr_text || '';
+                showStatus(`Line ${lineIndex} reset to original`, 'success');
+            }
+        }
+        
+        function saveAllLineCorrections() {
+            const textareas = document.querySelectorAll('.line-segment-text');
+            let savedCount = 0;
+            let totalCount = textareas.length;
+            
+            textareas.forEach(textarea => {
+                const lineIndex = parseInt(textarea.dataset.lineIndex);
+                const correctedText = textarea.value;
+                
+                fetch('/update_line_ocr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: currentImageName,
+                        line_index: lineIndex,
+                        corrected_text: correctedText
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    savedCount++;
+                    if (data.success) {
+                        // Update the segment in memory
+                        const segment = currentLineSegments.find(s => s.line_index === lineIndex);
+                        if (segment) {
+                            segment.ocr_text = correctedText;
+                        }
+                    }
+                    
+                    if (savedCount === totalCount) {
+                        showStatus(`All ${totalCount} line corrections saved!`, 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving line correction:', error);
+                    savedCount++;
+                    if (savedCount === totalCount) {
+                        showStatus('Some line corrections failed to save', 'error');
+                    }
+                });
+            });
+        }
+        
+        function resetAllLineCorrections() {
+            if (confirm('Are you sure you want to reset all line corrections to their original OCR text?')) {
+                const textareas = document.querySelectorAll('.line-segment-text');
+                textareas.forEach(textarea => {
+                    const lineIndex = parseInt(textarea.dataset.lineIndex);
+                    const segment = currentLineSegments.find(s => s.line_index === lineIndex);
+                    if (segment) {
+                        textarea.value = segment.ocr_text || '';
+                    }
+                });
+                showStatus('All line corrections reset to original', 'success');
+            }
+        }
+        
+        function saveCorrection() {
+            if (!currentImageName) {
+                showStatus('No image selected', 'error');
+                return;
+            }
+            
+            const correctedText = document.getElementById('correctedText').value;            
+            fetch('/update_inference', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image: currentImageName,
+                    corrected_text: correctedText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus('Correction saved successfully!', 'success');
+                    if (currentInferenceData) {
+                        currentInferenceData.corrected_text = correctedText;
+                    }
+                } else {
+                    showStatus(`Error saving correction: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving correction:', error);
+                showStatus('Error saving correction', 'error');
+            });
+        }
+        
+        function resetCorrection() {
+            if (currentInferenceData) {
+                document.getElementById('correctedText').innerText = currentInferenceData.original_text || '';                showStatus('Reset to original OCR output', 'success');
+            }
+        }
+        
+        function rerunInference() {
+            if (!currentImageName) {
+                showStatus('No image selected', 'error');
+                return;
+            }
+            
+            showStatus('Re-running OCR inference...', 'success');
+            
+            fetch('/rerun_inference', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image: currentImageName,
+                    split_image: isImageSplit
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the display with new inference results
+                    document.getElementById('originalTextDisplay').textContent = data.inference;
+                    document.getElementById('correctedText').value = data.corrected_text || data.inference;
+                    currentLineSegments = data.line_segments || [];
+                    updateLineSegmentsDisplay();
+                    showStatus(data.split_processing ? 'Split OCR inference completed!' : 'OCR inference completed!', 'success');
+                    
+                    // Update current inference data
+                    if (currentInferenceData) {
+                        currentInferenceData.original_text = data.inference;
+                        currentInferenceData.corrected_text = data.corrected_text || data.inference;
+                        currentInferenceData.line_segments = data.line_segments;
+                        currentInferenceData.total_lines = data.total_lines;
+                    }
+                    
+                    document.getElementById('lineSegmentsStats').textContent = `Found ${data.total_lines} line segments`;
+                } else {
+                    showStatus(`Error running inference: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error running inference:', error);
+                showStatus('Error running inference', 'error');
+            });
+        }
+        
+        function setDrawMode(drawing) {
+            drawMode = drawing;
+            canvas.selection = !drawing;
+            
+            // Clear any active selection when switching modes
+            canvas.discardActiveObject();
+            
+            // Update all existing objects
+            canvas.forEachObject(obj => {
+                if (obj.type === 'rect') {
+                    obj.selectable = !drawing;
+                    obj.evented = !drawing;
+                }
+            });
+            
+            updateModeButtons();
+            canvas.renderAll();
+        }
+        
+        function updateModeButtons() {
+            const drawBtn = document.getElementById('drawModeBtn');
+            const selectBtn = document.getElementById('selectModeBtn');
+            
+            if (drawMode) {
+                drawBtn.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+                selectBtn.style.background = 'linear-gradient(45deg, #007bff, #0056b3)';
+            } else {
+                drawBtn.style.background = 'linear-gradient(45deg, #007bff, #0056b3)';
+                selectBtn.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+            }
+        }
+        
+        function onMouseDown(options) {
+            if (!drawMode) return;
+            
+            isDrawing = true;
+            const pointer = canvas.getPointer(options.e);
+            startX = pointer.x;
+            startY = pointer.y;
+            
+            currentRect = new fabric.Rect({
+                left: startX,
+                top: startY,
+                width: 0,
+                height: 0,
+                fill: 'transparent',
+                stroke: '#ff0000',
+                strokeWidth: 2,
+                selectable: false,
+                evented: false,
+                errorType: 'spelling',
+                text: ''
+            });
+            
+            canvas.add(currentRect);
+        }
+        
+        function onMouseMove(options) {
+            if (!isDrawing || !currentRect) return;
+            
+            const pointer = canvas.getPointer(options.e);
+            const width = Math.abs(pointer.x - startX);
+            const height = Math.abs(pointer.y - startY);
+            
+            currentRect.set({
+                left: Math.min(startX, pointer.x),
+                top: Math.min(startY, pointer.y),
+                width: width,
+                height: height
+            });
+            
+            canvas.renderAll();
+        }
+        
+        function onMouseUp() {
+            if (!isDrawing) return;
+            
+            isDrawing = false;
+            if (currentRect && (currentRect.width < 5 || currentRect.height < 5)) {
+                canvas.remove(currentRect);
+            } else if (currentRect) {
+                // Set the correct interaction properties based on current mode
+                currentRect.set({
+                    selectable: !drawMode,
+                    evented: !drawMode
+                });
+            }
+            currentRect = null;
+            canvas.renderAll();
+        }
+        
+        function onSelectionCreated(e) {
+            document.getElementById('deleteBoxBtn').disabled = false;
+            updateFormFields(e.selected[0]);
+        }
+        
+        function onSelectionUpdated(e) {
+            updateFormFields(e.selected[0]);
+        }
+        
+        function onSelectionCleared() {
+            document.getElementById('deleteBoxBtn').disabled = true;
+            clearFormFields();
+        }
+        
+        function updateFormFields(obj) {
+            if (obj) {
+                document.getElementById('errorType').value = obj.errorType || 'spelling';
+                document.getElementById('textInput').value = obj.text || '';
+            }
+        }
+        
+        function clearFormFields() {
+            document.getElementById('errorType').value = 'spelling';
+            document.getElementById('textInput').value = '';
+        }
+        
+        function updateSelectedBoxErrorType() {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                activeObject.errorType = document.getElementById('errorType').value;
+            }
+        }
+        
+        function updateSelectedBoxText() {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                activeObject.text = document.getElementById('textInput').value;
+            }
+        }
+        
+        function deleteSelectedBox() {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                canvas.remove(activeObject);
+                canvas.discardActiveObject();
+                canvas.renderAll();
+            }
+        }
+        
+        function clearAllBoxes() {
+            if (confirm('Are you sure you want to clear all annotation boxes?')) {
+                const objects = canvas.getObjects().filter(obj => obj.type === 'rect');
+                objects.forEach(obj => canvas.remove(obj));
+                canvas.renderAll();
+                showStatus('All annotation boxes cleared', 'success');
+            }
+        }
+        
+        function saveAnnotations() {
+            if (!currentImageName) {
+                showStatus('No image selected', 'error');
+                return;
+            }
+            
+            const boxes = canvas.getObjects()
+                .filter(obj => obj.type === 'rect')
+                .map(obj => ({
+                    x: obj.left,
+                    y: obj.top,
+                    width: obj.width,
+                    height: obj.height,
+                    errorType: obj.errorType || 'spelling',
+                    text: obj.text || ''
+                }));
+            
+            const annotationData = {
+                image: currentImageName,
+                annotations: boxes,
+                timestamp: new Date().toISOString()
+            };
+            
+            fetch('/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(annotationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus(`Annotations saved! (${boxes.length} boxes)`, 'success');
+                } else {
+                    showStatus('Error saving annotations', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving annotations:', error);
+                showStatus('Error saving annotations', 'error');
+            });
+        }
+        
+        function insertSpanishChar(char) {
+            // Get the currently focused textarea or input
+            const activeElement = document.activeElement;
+            let targetInput;
+            
+            // Determine which input to use
+            if (activeElement && (activeElement.id === 'textInput' || activeElement.id === 'correctedText' || activeElement.classList.contains('line-segment-text'))) {
+                targetInput = activeElement;
+            } else {
+                // Default to corrected text if no specific input is focused
+                targetInput = document.getElementById('correctedText');
+            }
+            
+            if (!targetInput) {
+                console.log('No target input found');
+                return;
+            }
+            
+            const start = targetInput.selectionStart || 0;
+            const end = targetInput.selectionEnd || 0;
+            const text = targetInput.value;
+            
+            targetInput.value = text.substring(0, start) + char + text.substring(end);
+            targetInput.setSelectionRange(start + 1, start + 1);
+            targetInput.focus();
+            
+            // Trigger input event to ensure the change is registered
+            const event = new Event('input', { bubbles: true });
+            targetInput.dispatchEvent(event);
+            
+            // Update the selected box if working with annotation text
+            if (targetInput.id === 'textInput') {
+                updateSelectedBoxText();
+            }
+            
+            console.log(`Inserted character '${char}' at position ${start}`);
+        }
+        
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            statusElement.style.display = 'block';
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        function updateImageName() {
+            document.getElementById('currentImageName').textContent = currentImageName || 'No image loaded';
+        }
+        
+        function loadCurrentImage() {
+            if (!currentImageName) return;
+            const imgUrl = `/image/${currentImageName}`;
+            
+            fabric.Image.fromURL(imgUrl, img => {
+                canvas.clear();
+                
+                // Preserve aspect ratio and resize canvas to fit image with larger viewport
+                const maxWidth = 1600;
+                const maxHeight = 1000;
+                
+                let scaleX = maxWidth / img.width;
+                let scaleY = maxHeight / img.height;
+                let scale = Math.min(scaleX, scaleY);
+                
+                const newWidth = img.width * scale;
+                const newHeight = img.height * scale;
+                
+                canvas.setDimensions({
+                    width: newWidth,
+                    height: newHeight
+                });
+                
+                canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+                    scaleX: scale,
+                    scaleY: scale
+                });
+            });
+        }
+
+        // Corrected text zoom controls
+        (function initTextZoom(){
+            const correctedText = document.getElementById('correctedText');
+            const inc = document.getElementById('increaseTextZoom');
+            const dec = document.getElementById('decreaseTextZoom');
+            let currentSize = 20;
+            function applySize(){ correctedText.style.fontSize = currentSize + 'px'; }
+            inc.addEventListener('click', () => { currentSize = Math.min(40, currentSize + 2); applySize(); });
+            dec.addEventListener('click', () => { currentSize = Math.max(14, currentSize - 2); applySize(); });
+        })();
+
+        // PDF controls
+        function togglePdfControls(show, totalPages) {
+            const ctrls = document.getElementById('pdfControls');
+            ctrls.style.display = show ? 'flex' : 'none';
+            if (show) updatePageIndicator(currentPageIndex, totalPages);
+        }
+
+        function updatePageIndicator(pageIndex, totalPages) {
+            const el = document.getElementById('pageIndicator');
+            el.textContent = `Page ${pageIndex + 1} / ${totalPages}`;
+        }
+
+        document.getElementById('prevPageBtn').addEventListener('click', () => {
+            if (!isPdf || pdfPages.length === 0) return;
+            currentPageIndex = Math.max(0, currentPageIndex - 1);
+            currentImageName = pdfPages[currentPageIndex];
+            updatePageIndicator(currentPageIndex, pdfPages.length);
+            loadCurrentImage();
+            loadInferenceData();
+            updateImageName();
+        });
+
+        document.getElementById('nextPageBtn').addEventListener('click', () => {
+            if (!isPdf || pdfPages.length === 0) return;
+            currentPageIndex = Math.min(pdfPages.length - 1, currentPageIndex + 1);
+            currentImageName = pdfPages[currentPageIndex];
+            updatePageIndicator(currentPageIndex, pdfPages.length);
+            loadCurrentImage();
+            loadInferenceData();
+            updateImageName();
+        });
+        
+        function loadFirstImage() {
+            fetch('/get_current_image')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image_name) {
+                        currentImageName = data.image_name;
+                        updateImageName();
+                        loadCurrentImage();
+                        loadInferenceData();
+                    }
+                });
+        }
+        
+        function loadNextImage() {
+            fetch('/next_image', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    currentImageName = data.image_name || '';
+                    updateImageName();
+                    if (currentImageName) {
+                        loadCurrentImage();
+                        loadInferenceData();
+                    } else {
+                        showStatus('No more images.', 'error');
+                    }
+                });
+        }
+        
+        // Scroll to OCR results function
+        function scrollToOCRResults() {
+            const inferencePanel = document.querySelector('.inference-panel');
+            if (inferencePanel) {
+                inferencePanel.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+        
+        // Handle scroll events to show/hide scroll indicator
+        function handleScroll() {
+            const imagePanel = document.querySelector('.image-panel');
+            const scrollIndicator = document.getElementById('scrollIndicator');
+            
+            if (imagePanel && scrollIndicator) {
+                const rect = imagePanel.getBoundingClientRect();
+                const isImagePanelVisible = rect.bottom > 0 && rect.top < window.innerHeight;
+                
+                // Show indicator when image panel is visible and OCR results are not yet visible
+                if (isImagePanelVisible && rect.bottom > window.innerHeight * 0.5) {
+                    scrollIndicator.style.display = 'block';
+                } else {
+                    scrollIndicator.style.display = 'none';
+                }
+            }
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            
+            // Add scroll event listener to window
+            window.addEventListener('scroll', handleScroll);
+            
+            console.log("✅ App initialized");
+        });
+    </script>
+</body>
+</html>
