@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Text Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview-section {
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .preview-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .image-preview {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .image-preview img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h3 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            font-size: 0.9em;
+            padding: 8px 16px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .results-text {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 150px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .model-info {
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .model-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .model-info p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .api-status.online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .api-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator.online {
+            background: #28a745;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin-top: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .upload-area {
+                padding: 20px;
+            }
+
+            .preview-container {
+                flex-direction: column;
+            }
+
+            .results-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 OCR Text Recognition</h1>
+            <p>Upload an image and extract text using advanced deep learning</p>
+        </div>
+
+        <div class="api-status" id="apiStatus">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="statusText">Checking API status...</span>
+        </div>
+
+        <div class="model-info">
+            <h3>🤖 Spanish OCR Model</h3>
+            <p>Powered by CNN + BiLSTM + CTC architecture with attention mechanism</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Click to upload or drag and drop</div>
+                <div class="upload-subtext">Supports JPG, PNG, JPEG files</div>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    Choose Image
+                </button>
+                <button class="btn" id="processBtn" onclick="processImage()" disabled>
+                    Process Image
+                </button>
+            </div>
+        </div>
+
+        <div class="preview-section" id="previewSection">
+            <h3>📸 Image Preview</h3>
+            <div class="preview-container">
+                <div class="image-preview">
+                    <img id="imagePreview" alt="Preview">
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <p>Processing image... Please wait</p>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h3>📝 Extracted Text</h3>
+                <button class="btn copy-btn" onclick="copyText()">Copy Text</button>
+            </div>
+            <div class="results-text" id="resultsText"></div>
+        </div>
+
+        <div id="messageArea"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const processBtn = document.getElementById('processBtn');
+        const previewSection = document.getElementById('previewSection');
+        const imagePreview = document.getElementById('imagePreview');
+        const loadingSection = document.getElementById('loadingSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsText = document.getElementById('resultsText');
+        const messageArea = document.getElementById('messageArea');
+        const apiStatus = document.getElementById('apiStatus');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+
+        let selectedFile = null;
+        let apiOnline = false;
+
+        // Check API status on page load
+        window.addEventListener('load', checkApiStatus);
+
+        async function checkApiStatus() {
+            try {
+                console.log('Checking API status...');
+                
+                // Try a simple GET request without custom headers first
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                console.log('Health check response:', response.status, response.statusText);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Health check data:', data);
+                    
+                    // Check if the API is healthy and model is loaded
+                    if (data.status === 'healthy' && data.model_loaded) {
+                        apiOnline = true;
+                        apiStatus.className = 'api-status online';
+                        statusIndicator.className = 'status-indicator online';
+                        statusText.textContent = 'API is online and model is loaded';
+                    } else if (data.status === 'healthy' && !data.model_loaded) {
+                        apiOnline = false;
+                        apiStatus.className = 'api-status offline';
+                        statusIndicator.className = 'status-indicator offline';
+                        statusText.textContent = 'API is online but model is not loaded';
+                    } else {
+                        throw new Error(`API status: ${data.status}`);
+                    }
+                } else {
+                    throw new Error(`API responded with ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+                
+                // If /health fails, try the root endpoint
+                try {
+                    console.log('Trying root endpoint...');
+                    const rootResponse = await fetch(`${API_BASE_URL}/`, {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+                    
+                    console.log('Root response:', rootResponse.status, rootResponse.statusText);
+                    
+                    if (rootResponse.ok) {
+                        const rootData = await rootResponse.json();
+                        console.log('Root data:', rootData);
+                        
+                        apiOnline = true;
+                        apiStatus.className = 'api-status online';
+                        statusIndicator.className = 'status-indicator online';
+                        statusText.textContent = 'API is online and ready (via root endpoint)';
+                        return;
+                    }
+                } catch (rootError) {
+                    console.error('Root endpoint also failed:', rootError);
+                }
+                
+                apiOnline = false;
+                apiStatus.className = 'api-status offline';
+                statusIndicator.className = 'status-indicator offline';
+                statusText.textContent = `API connection failed: ${error.message}`;
+            }
+        }
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                showMessage('Please select a valid image file.', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            processBtn.disabled = false;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                previewSection.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Hide previous results
+            resultsSection.style.display = 'none';
+            clearMessages();
+        }
+
+        async function processImage() {
+            if (!selectedFile) {
+                showMessage('Please select an image first.', 'error');
+                return;
+            }
+
+            if (!apiOnline) {
+                showMessage('API is offline. Please check if your server is running on localhost:8000', 'error');
+                return;
+            }
+
+            // Show loading
+            loadingSection.style.display = 'block';
+            resultsSection.style.display = 'none';
+            processBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile); 
+
+                const response = await fetch(`${API_BASE_URL}/ocr/predict`, { 
+                    method: 'POST',
+                    mode: 'cors',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log(result)
+                // Hide loading
+                loadingSection.style.display = 'none';
+                processBtn.disabled = false;
+                console.log(result.extracted_text)
+                // Show results
+                if (result.status === 'success' && result.extracted_text) {
+                    console.log(1)
+                    resultsText.textContent = result.extracted_text;
+                    resultsSection.style.display = 'block';
+                    showMessage(`Text extraction completed successfully!`, 'success');
+                } else if (result.error) {
+                    showMessage(`Error: ${result.error}`, 'error');
+                } else {
+                    showMessage('No text could be extracted from the image.', 'error');
+                }
+
+            } catch (error) {
+                // Hide loading
+                loadingSection.style.display = 'none';
+                processBtn.disabled = false;
+                
+                console.error('Error processing image:', error);
+                showMessage(`Error processing image: ${error.message}. Please check if your API is running on localhost:8000`, 'error');
+            }
+        }
+
+        function copyText() {
+            const text = resultsText.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage('Text copied to clipboard!', 'success');
+            }).catch(() => {
+                showMessage('Failed to copy text to clipboard.', 'error');
+            });
+        }
+
+        function showMessage(message, type) {
+            clearMessages();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            messageArea.appendChild(messageDiv);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        function clearMessages() {
+            messageArea.innerHTML = '';
+        }
+
+        // Periodically check API status
+        setInterval(checkApiStatus, 50000); // Check every 30 seconds
+    </script>
+</body>
+</html>
