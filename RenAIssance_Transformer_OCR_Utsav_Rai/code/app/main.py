@@ -885,7 +885,7 @@ line_segmentation_check = ttk.Checkbutton(control_panel, text="Line Segmentation
 line_segmentation_check.pack(fill=tk.X, pady=5)
 
 # Frame for Line Segmentation Sliders (initially not packed)
-line_segmentation_frame = tk.Frame(control_panel, bg='#2e2e2e')
+line_segmentation_frame = tk.Frame(control_panel, bg="#702121")
 
 # Line Segmentation Parameters (inside the frame)
 # Line Segmentation Parameters (inside the frame)
