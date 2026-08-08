@@ -12,7 +12,8 @@ from utils import SpanishDocumentsDataset, collate_fn, compute_metrics, plot_met
 
 # Load configuration
 try:
-    with open("config.yaml", "r") as file:
+    config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
+    with open(config_path, "r") as file:
         config = yaml.safe_load(file)
     # Ensure numerical values are properly parsed
     config["train_batch_size"] = int(config["train_batch_size"])
