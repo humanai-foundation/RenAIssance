@@ -1,0 +1,11 @@
+# LLM-Enhanced OCR Pipeline Requirements
+
+# Core dependencies
+python-docx>=1.1.0
+openai>=1.0.0
+
+# Already available from existing project
+# PyMuPDF>=1.24.0
+# opencv-python>=4.10.0
+# numpy>=1.26.0
+# pillow>=8.3.0
