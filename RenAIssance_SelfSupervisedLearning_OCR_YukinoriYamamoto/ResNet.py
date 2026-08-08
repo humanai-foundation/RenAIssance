@@ -1,5 +1,6 @@
 from torch import nn
 
+
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -36,7 +37,7 @@ class BasicBlock(nn.Module):
 
 
 class ResNet18(nn.Module):
-    def __init__(self, num_classes=1000):
+    def __init__(self):
         super(ResNet18, self).__init__()
         self.in_channels = 64
 
@@ -53,34 +54,29 @@ class ResNet18(nn.Module):
 
     def _make_layer(self, block, out_channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
-        layers = nn.ModuleList()
+        layers = []
 
         for stride in strides:
             layers.append(block(self.in_channels, out_channels, stride))
             self.in_channels = out_channels * block.expansion
 
-        return layers
+        return nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-        for layer in self.layer1:
-            x = layer(x)
-        for layer in self.layer2:
-            x = layer(x)
-        for layer in self.layer3:
-            x = layer(x)
-        for layer in self.layer4:
-            x = layer(x)
-
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
         x = self.avgpool(x)
         return x
 
 
 class ResNet34(nn.Module):
-    def __init__(self, num_classes=1000):
+    def __init__(self):
         super(ResNet34, self).__init__()
         self.in_channels = 64
 
@@ -97,34 +93,30 @@ class ResNet34(nn.Module):
 
     def _make_layer(self, block, out_channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
-        layers = nn.ModuleList()
+        layers = []
 
         for stride in strides:
             layers.append(block(self.in_channels, out_channels, stride))
             self.in_channels = out_channels * block.expansion
 
-        return layers
+        return nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-        for layer in self.layer1:
-            x = layer(x)
-        for layer in self.layer2:
-            x = layer(x)
-        for layer in self.layer3:
-            x = layer(x)
-        for layer in self.layer4:
-            x = layer(x)
-
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
         x = self.avgpool(x)
         return x
 
 
 class Bottleneck(nn.Module):
     expansion = 4
+
     def __init__(self, in_channels, out_channels, stride=(1, 1)):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
@@ -137,6 +129,7 @@ class Bottleneck(nn.Module):
         self.stride = stride
         self.shortcut_conv = nn.Conv2d(in_channels, out_channels * self.expansion, kernel_size=1, stride=stride, bias=False)
         self.shortcut_bn = nn.BatchNorm2d(out_channels * self.expansion)
+
     def forward(self, x):
         identity = x
         out = self.conv1(x)
@@ -154,6 +147,7 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
         return out
 
+
 class ResNet50(nn.Module):
     def __init__(self):
         super(ResNet50, self).__init__()
@@ -168,31 +162,27 @@ class ResNet50(nn.Module):
         self.layer4 = self._make_layer(Bottleneck, 512, 3, stride=(2, 1))
         self.last_conv = nn.Conv2d(2048, 512, kernel_size=1, stride=1, bias=False)
         self.avgpool = nn.AvgPool2d(kernel_size=(2, 1), stride=(2, 1))
-    
+
     def _make_layer(self, block, out_channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
-        layers = nn.ModuleList()
+        layers = []
         for stride in strides:
             layers.append(block(self.in_channels, out_channels, stride))
             self.in_channels = out_channels * block.expansion
-        return layers
-    
+        return nn.Sequential(*layers)
+
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-        for layer in self.layer1:
-            x = layer(x)
+        x = self.layer1(x)
         # print("layer 1", x.shape)
-        for layer in self.layer2:
-            x = layer(x)
+        x = self.layer2(x)
         # print("layer 2", x.shape)
-        for layer in self.layer3:
-            x = layer(x)
+        x = self.layer3(x)
         # print("layer 3", x.shape)
-        for layer in self.layer4:
-            x = layer(x)
+        x = self.layer4(x)
         # print("layer 4", x.shape)
         x = self.last_conv(x)
         x = self.avgpool(x)
