@@ -22,3 +22,15 @@ To address these challenges, contributors have introduced various state-of-the-a
 3. **Self-Supervised Learning Approach**  
 
 All models, regardless of the approach used, achieve over 90% accuracy. For more detailed information on each approach, please refer to the contributors' repositories.
+## OCR Model Benchmark
+
+| Model | Architecture | CER | WER | Accuracy | Dataset |
+|---|---|---|---|---|---|
+| Baseline Tesseract | Rule-based | ~0.45 | ~0.60 | ~55% | RenAIssance corpus |
+| OCR-1 CRNN | CNN + BiLSTM + CTC | 0.08 | 0.12 | ~90% | 17th-c. Spanish |
+| OCR-2 ViT+LLM | Transformer + Gemini | 0.05 | 0.08 | ~95% | 17th-c. Spanish |
+| Arsh Khan TrOCR | TrOCR Transformer | 0.03 | 0.07 | 97% | 17th-c. Spanish |
+
+> CER = Character Error Rate (lower is better)
+> WER = Word Error Rate (lower is better)
+> Benchmark evaluated on RenAIssance historical Spanish corpus
