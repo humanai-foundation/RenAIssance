@@ -24,16 +24,27 @@ except yaml.YAMLError as e:
 except ValueError as e:
     raise Exception(f"Error in configuration values: {e}")
 
+# Instantiate metrics once at module level to avoid repeated loading on every evaluation step
+cer_metric = load_metric("cer")
+wer_metric = load_metric("wer")
+bleu_metric = load_metric("bleu")
+
 class SpanishDocumentsDataset(Dataset):
     def __init__(self, image_dir, text_dir, processor):
+        if not os.path.isdir(image_dir):
+            raise FileNotFoundError(f"Image directory not found at '{image_dir}'")
+        if not os.path.isdir(text_dir):
+            raise FileNotFoundError(f"Text directory not found at '{text_dir}'")
         self.image_dir = image_dir
         self.text_dir = text_dir
         self.processor = processor
         self.filenames = [f for f in os.listdir(image_dir) if f.endswith('.jpg')]
-    
+        if not self.filenames:
+            raise ValueError(f"No .jpg files found in '{image_dir}'")
+
     def __len__(self):
         return len(self.filenames)
-    
+
     def __getitem__(self, idx):
         try:
             image_file = self.filenames[idx]
@@ -73,11 +84,11 @@ def compute_metrics(eval_pred):
             label_filtered = [token for token in label if token != -100]
             decoded_label = processor.decode(label_filtered, skip_special_tokens=True)
             decoded_labels.append(decoded_label)
-        cer = load_metric("cer").compute(predictions=decoded_preds, references=decoded_labels)
-        wer = load_metric("wer").compute(predictions=decoded_preds, references=decoded_labels)
+        cer = cer_metric.compute(predictions=decoded_preds, references=decoded_labels)
+        wer = wer_metric.compute(predictions=decoded_preds, references=decoded_labels)
         tokenized_preds = [pred.split() for pred in decoded_preds]
         tokenized_refs = [[ref.split()] for ref in decoded_labels]
-        bleu = load_metric("bleu").compute(predictions=tokenized_preds, references=tokenized_refs)
+        bleu = bleu_metric.compute(predictions=tokenized_preds, references=tokenized_refs)
         return {"cer": cer, "wer": wer, "bleu": bleu["bleu"]}
     except Exception as e:
         raise Exception(f"Failed to compute metrics: {e}")
@@ -110,9 +121,11 @@ def plot_metrics(logs, metric_name):
         raise Exception(f"Failed to plot metrics for {metric_name}: {e}")
 
 def generate_text_from_image_segment(image_path, processor, model):
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"Image file not found at '{image_path}'")
     try:
         image = Image.open(image_path).convert("RGB")
-        pixel_values = processor(image, return_tensors="pt").pixel_values.to(model.device)  # Ensure the input is on the same device as the model
+        pixel_values = processor(image, return_tensors="pt").pixel_values.to(model.device)
         generated_ids = model.generate(pixel_values)
         generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return generated_text
