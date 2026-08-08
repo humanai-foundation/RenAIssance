@@ -7,7 +7,7 @@ import tempfile
 from craft import CRAFT
 import craft_utils
 import imgproc
-
+from refinenet import RefineNet
 import fitz  # PyMuPDF
 from PIL import Image, ImageEnhance
 import cv2
@@ -33,33 +33,36 @@ def copyStateDict(state_dict):
         new_state_dict[name] = v
     return new_state_dict
 
+CRAFT_MODEL_PATH   = 'weights/craft_mlt_25k.pth'
+REFINER_MODEL_PATH = 'weights/craft_refiner_CTW1500.pth'
+
 @st.cache_resource
 def load_craft_model():
-    # Define the path to the pre-trained CRAFT model weights
-    trained_model_path = 'weights/craft_mlt_25k.pth'
-    
-    # Initialize the CRAFT model
-    net = CRAFT()     # initialize
+    if not os.path.exists(CRAFT_MODEL_PATH):
+        st.error(f"CRAFT weights not found at: {CRAFT_MODEL_PATH}")
+        st.stop()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
-    # Load the pre-trained weights
-    net.load_state_dict(copyStateDict(torch.load(trained_model_path, map_location=device)))
-    
+    net = CRAFT()
+    net.load_state_dict(copyStateDict(torch.load(CRAFT_MODEL_PATH, map_location=device)))
     net.to(device)
     net.eval()
-    
-    # Load refiner model if needed
-    refine_net = None
-    refine = True  # Set to True if using refine_net
-    if refine:
-        from refinenet import RefineNet
-        refiner_model_path = 'weights/craft_refiner_CTW1500.pth'  # Update the path
-        refine_net = RefineNet()
-        refine_net.load_state_dict(copyStateDict(torch.load(refiner_model_path, map_location=device)))
-        refine_net.to(device)
-        refine_net.eval()
-    return net, device, refine_net
+    return net, device
+
+@st.cache_resource
+def load_refiner_model():
+    """Only loaded when line segmentation is active — skipped otherwise."""
+
+    if not os.path.exists(REFINER_MODEL_PATH):
+        st.error(f"Refiner weights not found at: {REFINER_MODEL_PATH}")
+        st.stop()
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    refine_net = RefineNet()
+    refine_net.load_state_dict(copyStateDict(torch.load(REFINER_MODEL_PATH, map_location=device)))
+    refine_net.to(device)
+    refine_net.eval()
+    return refine_net
 
 def test_net(net, image, text_threshold, link_threshold, low_text, *, cuda, poly, device, refine_net=None):
     # Preprocess the image
@@ -105,19 +108,22 @@ def test_net(net, image, text_threshold, link_threshold, low_text, *, cuda, poly
 # Set up the OCR model
 @st.cache_resource
 def load_ocr_model():
-    device = "cpu"  # We're using CPU-optimized model
-    # Update paths to point to the quantized model
     model_path = "basenet/quantized"
-    processor_path = "basenet/ocr_weights"  # Keep using the original processor
-    
+    processor_path = "basenet/ocr_weights"
+
+    if not os.path.exists(processor_path):
+        st.error(f"OCR processor weights not found at: {processor_path}")
+        st.stop()
+    if not os.path.exists(model_path):
+        st.error(f"OCR model weights not found at: {model_path}")
+        st.stop()
+
+    device = "cpu"  # We're using CPU-optimized model
     processor = TrOCRProcessor.from_pretrained(processor_path)
-    
-    # Load the quantized ONNX model
     model = ORTModelForVision2Seq.from_pretrained(
         model_path,
         provider="CPUExecutionProvider"
     )
-    
     return processor, model, device
 
 processor, model, device = load_ocr_model()
@@ -442,7 +448,8 @@ def apply_line_segmentation(image, padding, min_width, margin, threshold, page_i
     if page_image_name in st.session_state['craft_outputs']:
         contours = st.session_state['craft_outputs'][page_image_name]['contours']
     else:
-        net, device, refine_net = load_craft_model()
+        net, device = load_craft_model()
+        refine_net = load_refiner_model()
         
         # Convert image to RGB if necessary
         if len(image.shape) == 2 or image.shape[2] == 1:
