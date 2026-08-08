@@ -60,7 +60,8 @@ class ContrastiveLearningDataset(Dataset):
     def __init__(self, img_dir, crop_height_ratio=0.2, img_size=(64, 384)):
         super().__init__()
         self.img_size = img_size
-        assert os.path.isdir(img_dir)
+        if not os.path.isdir(img_dir):
+            raise FileNotFoundError(f"Image directory not found at '{img_dir}'")
         self.filepaths = [
             os.path.join(img_dir, filename) for filename in os.listdir(img_dir)
             if os.path.isfile(os.path.join(img_dir, filename))
@@ -88,10 +89,13 @@ class ContrastiveLearningDataset(Dataset):
         return len(self.filepaths)
 
     def __getitem__(self, idx):
+        img_path = self.filepaths[idx]
+        if not os.path.exists(img_path):
+            raise FileNotFoundError(f"Image file not found at '{img_path}'")
         try:
-            img = Image.open(self.filepaths[idx])
+            img = Image.open(img_path)
         except IOError:
-            return "cannot identify image file '%s'", self.filepaths[idx]
+            raise IOError(f"Cannot identify or open image file '{img_path}'")
         original = self.original_transform(img)
         augmented = self.augmented_transform(img)
         return {"original": original, "augmented": augmented}
@@ -100,7 +104,16 @@ class ContrastiveLearningDataset(Dataset):
 class DecoderDataset(Dataset):
     def __init__(self, csv_file, img_dir, token_dict, img_size=(64, 384), max_length=20, transform=None):
         self.img_dir = img_dir
-        self.annotations = pd.read_csv(csv_file)
+        if not os.path.exists(csv_file):
+            raise FileNotFoundError(f"CSV file not found at '{csv_file}'")
+        try:
+            self.annotations = pd.read_csv(csv_file)
+        except Exception as e:
+            raise ValueError(f"Failed to read CSV file '{csv_file}': {e}")
+        if self.annotations.empty:
+            raise ValueError(f"CSV file '{csv_file}' is empty")
+        if not os.path.isdir(img_dir):
+            raise FileNotFoundError(f"Image directory not found at '{img_dir}'")
         self.token_dict = token_dict
         self.max_length = max_length
         self.transform = transforms.Compose([
@@ -120,7 +133,13 @@ class DecoderDataset(Dataset):
 
     def __getitem__(self, index):
         img_name = self.annotations.iloc[index, 1]
-        image = Image.open(os.path.join(self.img_dir, img_name))  # Use PIL to read the image
+        img_path = os.path.join(self.img_dir, img_name)
+        if not os.path.exists(img_path):
+            raise FileNotFoundError(f"Image file not found at '{img_path}'")
+        try:
+            image = Image.open(img_path)
+        except IOError:
+            raise IOError(f"Cannot identify or open image file '{img_path}'")
         image = self.transform(image)  # Image is in CHW format now
 
         label = self.annotations.iloc[index, 0]
