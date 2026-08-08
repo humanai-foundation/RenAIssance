@@ -1,0 +1,39 @@
+name: CRNN OCR-1 Unit Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest torch --index-url https://download.pytorch.org/whl/cpu
+        pip install google-generativeai
+
+    - name: Run CRNN OCR-1 tests
+      run: |
+        pytest tests/test_crnn_ocr1.py -v
+```
+
+---
+
+**Step 5 — Commit message:**
+```
+ci: Add GitHub Actions workflow for CRNN tests (refs #57)

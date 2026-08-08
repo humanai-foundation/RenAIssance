@@ -6,6 +6,11 @@ from docx import Document
 import string
 import numpy as np
 from PIL import Image, ImageOps
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from common.preprocessor import DocumentPreprocessor
+preprocessor = DocumentPreprocessor()
 
 def count_files_in_folder(folder_path, extensions_list):
     # Initialize counter for files
@@ -39,12 +44,16 @@ def pdf_to_images(pdf_path, output_folder):
     # Close the PDF
     pdf_document.close()
 
-def split_and_save_image(image_path, output_folder, last_image_number):
-    # Read the image
-    img = cv2.imread(image_path)
+def split_and_save_image(image_path, output_folder, last_image_num):
+    # Read the image safely using the centralized module
+    img = preprocessor.read_image(image_path)
 
-    # Get image width
-    _, width, _ = img.shape
+    # Safely get the width, regardless of whether the image is grayscale or color
+    height, width = img.shape[:2]
+
+    # You can alter these, to get the optimum values...
+
+  
 
     # You can alter these, to get the optimum values for both
     width_for_single_page, width_for_dual_pages = 350, 450
@@ -198,8 +207,7 @@ def process_textfiles(textfile, sorted_BoundBox_folder, output_folder, TEST_SIZE
 
 def extract_bounding_boxes(image_path, bounding_boxes_file, output_folder, word):
     # Read the main image
-    main_image = cv2.imread(image_path)
-    # Create the output folder if it doesn't exist
+main_image = preprocessor.read_image(image_path)    # Create the output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -393,7 +401,7 @@ def gaussian_noise_aug(training_data):
     for filename in os.listdir(training_data):
         if filename.endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
             img_path = os.path.join(training_data, filename)
-            img = cv2.imread(img_path)
+            main_image = preprocessor.read_image(image_path)
             noisy_img = add_black_gaussian_noise(img)
             new_filename = f"{os.path.splitext(filename)[0]}_gauss{os.path.splitext(filename)[1]}"
             output_path = os.path.join(training_data, new_filename)
