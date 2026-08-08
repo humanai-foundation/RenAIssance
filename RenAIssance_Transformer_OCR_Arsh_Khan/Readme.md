@@ -11,8 +11,8 @@
 * [Results](#results)
 * [Useful Links](#links)
 * [Acknowledgements](#acknowledgements)
-* [License](#license)
-
+## License
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 ---
 
 # <ins>About the Project
