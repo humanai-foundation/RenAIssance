@@ -4,6 +4,14 @@ from torch.nn.functional import normalize
 
 
 def cosine_similarity(x, y):
+    if x.shape[0] != y.shape[0]:
+        raise ValueError(
+            f"Batch size mismatch: x has {x.shape[0]}, y has {y.shape[0]}"
+        )
+    if x.shape[2] != y.shape[2]:
+        raise ValueError(
+            f"Feature dimension mismatch: x has {x.shape[2]}, y has {y.shape[2]}"
+        )
     x = normalize(x, dim=2)
     y = normalize(y, dim=2)
     return torch.bmm(x, y.transpose(1, 2))
