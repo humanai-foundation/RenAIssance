@@ -20,8 +20,10 @@ import os
 
 # Set up the OCR model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "../../weights"
-processor_path = "../../weights"
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_OCR_MODEL_PATH = os.path.abspath(os.path.join(APP_DIR, "..", "..", "models"))
+model_path = os.getenv("RENAISSANCE_OCR_MODEL_DIR", DEFAULT_OCR_MODEL_PATH)
+processor_path = model_path
 
 processor = TrOCRProcessor.from_pretrained(processor_path)
 model = VisionEncoderDecoderModel.from_pretrained(model_path).to(device)
