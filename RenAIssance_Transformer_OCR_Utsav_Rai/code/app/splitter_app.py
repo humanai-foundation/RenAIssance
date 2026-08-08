@@ -11,6 +11,13 @@ from tkinter import HORIZONTAL, DoubleVar, IntVar
 from PIL import Image, ImageTk
 import platform
 from tkinter import ttk
+from shared_app_utils import (
+    draw_bounding_boxes,
+    filter_and_adjust_bounding_boxes,
+    get_bounding_boxes,
+    read_contour_points,
+    split_bounding_boxes,
+)
 
 # Function to create a custom slider with text on the left, slider in the middle, and value on the right
 # Function to create a custom slider with text on the left, slider in the middle, and value on the right
@@ -102,69 +109,6 @@ def configure_button_style():
               background=[("active", "#646464")],  # Hover color
               relief=[("pressed", "groove"), ("!pressed", "flat")])
 
-# Read contour points from a file
-def read_contour_points(file_path):
-    contour_points = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            points = list(map(int, line.strip().split(',')))
-            contour_points.append(points)
-    return contour_points
-
-# Function to generate bounding boxes around contours
-def get_bounding_boxes(contours, img_width, img_height, padding=10, min_width=20, margin=0.1):
-    bounding_boxes = []
-    top_margin = img_height * margin
-    bottom_margin = img_height * (1 - margin)
-
-    for contour in contours:
-        points = np.array(contour).reshape((-1, 2))
-        x, y, w, h = cv2.boundingRect(points)
-        if w > min_width and (y > top_margin and y + h < bottom_margin):
-            x = max(x - padding, 0)
-            w = min(w + 2 * padding, img_width - x)
-            bounding_boxes.append((x, y, x + w, y + h))
-
-    centers = [(x1 + (x2 - x1) // 2) for (x1, y1, x2, y2) in bounding_boxes]
-    median_center = np.median(centers)
-    
-    filtered_boxes = []
-    for (x1, y1, x2, y2) in bounding_boxes:
-        center = x1 + (x2 - x1) // 2
-        if abs(center - median_center) < 800:
-            filtered_boxes.append((x1, y1, x2, y2))
-    return filtered_boxes
-
-# Function to draw bounding boxes on an image
-def draw_bounding_boxes(image, bounding_boxes, color=(0, 255, 0), thickness=6):
-    for (x1, y1, x2, y2) in bounding_boxes:
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
-
-# Function to split tall bounding boxes into smaller ones based on a threshold and visualize them in red
-def split_bounding_boxes(image, bounding_boxes, threshold=0.8):
-    heights = [y2 - y1 for (x1, y1, x2, y2) in bounding_boxes]
-    median_height = np.median(heights)
-    new_bounding_boxes = []
-    split_bounding_boxes = []
-
-    for (x1, y1, x2, y2) in bounding_boxes:
-        height = y2 - y1
-        ratio = height / median_height
-        if ratio > 1 + threshold:  # Identify tall bounding boxes
-            split_number = round(ratio)
-            split_height = height // split_number
-            for i in range(split_number):
-                new_y1 = y1 + i * split_height
-                new_y2 = new_y1 + split_height if i < split_number - 1 else y2
-                split_bounding_boxes.append((x1, new_y1, x2, new_y2))
-        else:
-            new_bounding_boxes.append((x1, y1, x2, y2))
-    
-    # Visualize the split bounding boxes in red
-    draw_bounding_boxes(image, split_bounding_boxes, color=(255, 0, 0))
-    
-    return new_bounding_boxes + split_bounding_boxes
-
 # Function to save settings and apply them to all images
 def apply_to_all():
     for img_path, contour_path in zip(image_paths, contour_paths):
@@ -192,46 +136,6 @@ def navigate(step):
     global img_index
     img_index = (img_index + step) % len(image_paths)
     update_image()
-
-def filter_and_adjust_bounding_boxes(bounding_boxes):
-    x1s = [x1 for (x1, y1, x2, y2) in bounding_boxes]
-    x2s = [x2 for (x1, y1, x2, y2) in bounding_boxes]
-    median_x1 = int(np.median(x1s)) - 30  # Calculate median x1
-    median_x2 = int(np.median(x2s)) + 20  # Calculate median x2 with a small adjustment
-
-    adjusted_boxes = []
-    for (x1, y1, x2, y2) in bounding_boxes:
-        adjusted_boxes.append((median_x1, y1, median_x2, y2))  # Adjust bounding boxes to median x1 and x2
-
-    # Remove overlapping bounding boxes, keeping only the one with the greater width
-    non_overlapping_boxes = []
-    for box in adjusted_boxes:
-        overlap = False
-        for other_box in non_overlapping_boxes:
-            x1, y1, x2, y2 = box
-            ox1, oy1, ox2, oy2 = other_box
-            
-            # Calculate intersection area
-            inter_x1 = max(x1, ox1)
-            inter_y1 = max(y1, oy1)
-            inter_x2 = min(x2, ox2)
-            inter_y2 = min(y2, oy2)
-            
-            inter_area = max(0, inter_x2 - inter_x1) * max(0, inter_y2 - inter_y1)
-            box_area = (x2 - x1) * (y2 - y1)
-            other_box_area = (ox2 - ox1) * (oy2 - oy1)
-            
-            if inter_area > 0.9 * min(box_area, other_box_area):  # Check for 90% overlap
-                overlap = True
-                if box_area > other_box_area:
-                    non_overlapping_boxes.remove(other_box)
-                    non_overlapping_boxes.append(box)
-                break
-        if not overlap:
-            non_overlapping_boxes.append(box)
-    
-    return non_overlapping_boxes
-
 
 # Zoom function triggered by mouse scroll
 def zoom(event):

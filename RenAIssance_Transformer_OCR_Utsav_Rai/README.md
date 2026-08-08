@@ -1,315 +1,386 @@
-# Historical Text Recognition using TrOCR
+# RenAIssance: Historical Transformer OCR for Early Spanish Texts
 
 <p align="center">
-  <img src="figs/humanai.jpg" alt="Image 1" style="height: 100px; margin-right: 20px;"/>
-  <img src="figs/gsoc_logo.png" alt="Image 2" style="height: 50px;" />
+  <img src="figs/humanai.jpg" alt="HumanAI Foundation" style="height: 100px; margin-right: 20px;"/>
+  <img src="figs/gsoc_logo.png" alt="Google Summer of Code" style="height: 56px;"/>
 </p>
 
-This project aims to develop a robust Optical Character Recognition (OCR) system for historical texts using the TrOCR model from Hugging Face's `transformers` library. This project is part of the HumanAI Foundation initiative and was developed during Google Summer of Code 2024.
-
+This project builds an end-to-end OCR workflow for historical Spanish documents using TrOCR, CRAFT-based text detection, document preprocessing, line segmentation, and CPU-friendly quantized deployment. It was developed as part of the HumanAI Foundation initiative during Google Summer of Code 2024 and 2025.
 
 ![](figs/app.gif)
 
 ## Table of Contents
 
-- [Quick Start with Docker](#quick-start-with-docker)
-  - [Running Pre-built Docker Image](#running-pre-built-docker-image)
-  - [Building Docker Image Locally](#building-docker-image-locally)
-- [Overview](#overview)
-- [Installation](#installation)
-- [Configuration](#configuration)
+- [Project Snapshot](#project-snapshot)
+- [Why Historical OCR Is Hard](#why-historical-ocr-is-hard)
+- [Pipeline Overview](#pipeline-overview)
+- [Repository Map](#repository-map)
+- [Quick Start](#quick-start)
+- [Docker Workflow](#docker-workflow)
+- [Local Installation](#local-installation)
+- [Required Assets](#required-assets)
+- [Interactive App Usage](#interactive-app-usage)
 - [Usage](#usage)
   - [Data Preparation](#data-preparation)
   - [Training](#training)
   - [Inference](#inference)
-- [Datasets and Models](#datasets-and-models)
+  - [Quantization](#quantization)
+  - [Synthetic Data Generation](#synthetic-data-generation)
+- [Model Performance](#model-performance)
+- [Practical Notes](#practical-notes)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
 - [Links](#links)
 
-## Quick Start with Docker
+## Project Snapshot
 
-The easiest way to run the OCR application is using Docker. You can either pull the pre-built image from Docker Hub or build it locally.
+RenAIssance is more than a model-training repository. It combines:
 
-### Running Pre-built Docker Image
+1. PDF preprocessing for historical scans
+2. text detection with CRAFT
+3. contour-based line segmentation
+4. TrOCR fine-tuning and inference
+5. ONNX export and quantized CPU inference
+6. an interactive Streamlit application for page inspection and OCR
 
-The Docker image is available on Docker Hub: [utsavrai27/ocr-quantized](https://hub.docker.com/r/utsavrai27/ocr-quantized)
+The repository includes training code, test-time OCR scripts, app interfaces, quantization utilities, data preparation helpers, synthetic data generation assets, and sample PDFs for experimentation.
 
-#### Linux
+<img src="figs/screenshot1.png" /><br><br>
+<img src="figs/screenshot1.png" />
 
-1. **Install Docker**:
-   ```bash
-   # Ubuntu/Debian
-   sudo apt-get update
-   sudo apt-get install docker.io
-   sudo systemctl start docker
-   sudo systemctl enable docker
-   
-   # Add your user to docker group (optional, to run without sudo)
-   sudo usermod -aG docker $USER
-   # Log out and back in for this to take effect
-   ```
+## Why Historical OCR Is Hard
 
-2. **Pull the Docker image**:
-   ```bash
-   docker pull utsavrai27/ocr-quantized
-   ```
+OCR for seventeenth-century material is challenging because these documents often contain:
 
-3. **Run the container**:
-   ```bash
-   docker run -p 8502:8501 utsavrai27/ocr-quantized
-   ```
+- irregular printing and degraded scans
+- bleed-through and border artifacts
+- skewed or uneven page layouts
+- interchangeable historical glyphs such as `u/v` and `f/s`
+- inconsistent spelling and line-break conventions
 
-4. **Access the application**:
-   - Open your browser and navigate to: `http://localhost:8502`
+This project tackles those issues by combining image cleanup, document splitting, line detection, transformer-based recognition, and deployment-aware optimization instead of relying on a single OCR step.
 
-5. **To stop the container**:
-   - Press `Ctrl+C` in the terminal where the container is running
+## Pipeline Overview
 
-#### macOS
+### 1. Preprocessing
 
-1. **Install Docker Desktop for Mac**:
-   - Download [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
-   - Open the downloaded `.dmg` file and drag Docker to Applications
-   - Launch Docker Desktop from Applications
-   - Wait for Docker to start (whale icon in menu bar will stop animating)
+The app and utility scripts can:
 
-2. **Pull the Docker image**:
-   ```bash
-   docker pull utsavrai27/ocr-quantized
-   ```
+- render PDFs into page images using PyMuPDF
+- detect and split double-page scans into virtual left and right pages
+- deskew pages
+- remove borders
+- apply thresholding and noise filtering
 
-3. **Run the container**:
-   ```bash
-   docker run -p 8502:8501 utsavrai27/ocr-quantized
-   ```
+### 2. Text Detection
 
-4. **Access the application**:
-   - Open your browser and navigate to: `http://localhost:8502`
+The project uses CRAFT to locate text regions before OCR. The app caches contour outputs and uses them to build line-level reading order.
 
-5. **To stop the container**:
-   - Press `Ctrl+C` in the terminal where the container is running
-   - Or stop the container from Docker Desktop GUI
+### 3. Line Segmentation
 
-#### Windows
+Detected contours are converted into bounding boxes, filtered, optionally split if unusually tall, aligned around a common text column, and sorted top-to-bottom.
 
-1. **Install Docker Desktop for Windows**:
-   - Download and install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
-   - Follow the installation wizard
-   - Make sure to enable WSL 2 if prompted (recommended)
-   - Start Docker Desktop after installation (look for the Docker icon in your system tray)
+### 4. Text Recognition
 
-2. **Pull the Docker image**:
-   
-   Open Command Prompt or PowerShell and run:
-   ```powershell
-   docker pull utsavrai27/ocr-quantized
-   ```
+Line crops are transcribed with Hugging Face TrOCR models through `TrOCRProcessor` and `VisionEncoderDecoderModel`.
 
-3. **Run the container**:
-   ```powershell
-   docker run -p 8502:8501 utsavrai27/ocr-quantized
-   ```
-   
-   This command:
-   - Maps port 8501 inside the container to port 8502 on your machine
-   - Downloads and runs the image if it hasn't been pulled yet
+### 5. Optimization and Deployment
 
-4. **Access the application**:
-   - Open any web browser on your Windows machine
-   - Navigate to: `http://localhost:8502`
-   - You should see the Streamlit OCR application running
+The repository also supports ONNX export and CPU-focused quantized inference through `optimum` and `onnxruntime`, with a dedicated Streamlit deployment app in `code/app/qapp.py`.
 
-5. **To stop the container**:
-   - Press `Ctrl+C` in the terminal where the container is running
-   - Or find and stop the container in Docker Desktop's GUI
+## Repository Map
 
-### Building Docker Image Locally
-
-If you prefer to build the Docker image yourself:
-
-1. **Download the required model files** (see [Datasets and Models](#datasets-and-models) section):
-   - OCR model files → `models/`
-   - Quantized ONNX model → `quantized_model/`
-   - CRAFT weights → `weights/`
-
-2. **Build the Docker image**:
-   ```bash
-   cd RenAIssance_Transformer_OCR_Utsav_Rai
-   docker build -t renaissance-ocr .
-   ```
-
-3. **Run the container**:
-   ```bash
-   docker run -p 8501:8501 renaissance-ocr
-   ```
-
-4. **Access the application**:
-   - Open your browser and navigate to: `http://localhost:8501`
-
-#### Additional Docker Commands
-
-**Run in detached mode (background)**:
-```bash
-docker run -d -p 8501:8501 --name renaissance-ocr-app renaissance-ocr
+```text
+RenAIssance_Transformer_OCR_Utsav_Rai/
+|-- code/
+|   |-- app/                         # Streamlit applications and app-side OCR logic
+|   |-- CRAFT/                       # Text detection model code
+|   |-- datautils/                   # PDF processing and contour-to-line utilities
+|   |-- finetuning/                  # Extra finetuning notebooks and training experiments
+|   |-- quantization/                # ONNX export, quantization, and comparison scripts
+|   |-- synthetic_data_generation/   # Synthetic OCR training data generation tools
+|   |-- config.yaml                  # Training and inference configuration
+|   |-- train.py                     # TrOCR fine-tuning pipeline
+|   |-- test.py                      # Folder-based OCR inference
+|   `-- utils.py                     # Dataset, metrics, plotting, and helper functions
+|-- data/
+|   |-- test/                        # Example segmented page folders
+|   |-- test_books/                  # Sample PDFs for app testing
+|   `-- train/                       # Training PDFs, processed pages, line segments, transcriptions
+|-- figs/                            # Logos and demo GIF
+|-- models/                          # Place model files here
+|-- weights/                         # Place CRAFT weight files here
+|-- Dockerfile
+|-- requirements.txt
+|-- README.md
+`-- readmeNEW.md
 ```
 
-**Check container logs**:
+## Quick Start
+
+If you already have the required model files, the fastest way to see the app is:
+
 ```bash
-docker logs renaissance-ocr-app
+cd code/app
+streamlit run app_streamlit.py
 ```
 
-**Stop the container**:
+For the containerized quantized version:
+
 ```bash
-docker stop renaissance-ocr-app
+docker pull utsavrai27/ocr-quantized
+docker run -p 8502:8501 utsavrai27/ocr-quantized
 ```
 
-**Remove the container**:
-```bash
-docker rm renaissance-ocr-app
+Then open:
+
+```text
+http://localhost:8502
 ```
 
-**Check health status**:
+## Docker Workflow
+
+The Docker image is built around the CPU-optimized quantized app.
+
+### Run the published image
+
 ```bash
-docker inspect --format='{{.State.Health.Status}}' renaissance-ocr-app
+docker pull utsavrai27/ocr-quantized
+docker run -p 8502:8501 utsavrai27/ocr-quantized
 ```
 
-## Overview
+### Build locally
 
-In the digital age, preserving historical documents is paramount for cultural and academic research. Traditional OCR tools often struggle with the intricacies of aged manuscripts, especially those from the seventeenth century, which present unique challenges due to handwriting variability, font differences, and document degradation. This project, under the Google Summer of Code (GSoC) initiative, leverages transformer models to develop a state-of-the-art OCR system capable of accurately transcribing historical Spanish texts.
+Before building locally, make sure the following exist:
 
-The primary objective is to create an advanced, transformer-based OCR model tailored for seventeenth-century Spanish documents, focusing on minimizing Character Error Rate (CER) and Word Error Rate (WER) to achieve high accuracy in text extraction.
+- CRAFT weights in `weights/`
+- TrOCR processor/model config files in `models/`
+- quantized ONNX files in `quantized_model/`
 
-### Key Challenges and Solutions
+Then run:
 
-#### Printing Irregularities and Ambiguities
-- **Interchangeable Characters**: Characters like 'u' and 'v', and 'f' and 's' were used interchangeably.
-- **Tildes and Diacritical Marks**: Used to save space or due to type mold reuse.
-- **Old Spellings and Modern Interpretations**: Differences in character usage between historical and modern Spanish.
-- **Line End Hyphens**: Words split across lines might not always be hyphenated.
+```bash
+docker build -t renaissance-ocr .
+docker run -p 8501:8501 renaissance-ocr
+```
 
-#### Data Preparation and Augmentation
-- **PDF to Images**: Converting PDFs to high-resolution images and preprocessing them.
-- **Enhancements**: Deskewing, noise removal, and augmentation techniques like rotation, perspective changes, and Gaussian noise addition.
+The container starts `code/app/qapp.py`, which uses the quantized ONNX recognizer with `CPUExecutionProvider`.
 
-#### Model Architecture
-- **Vision Transformer (ViT) Encoder**: Processes images as sequences of fixed-size patches.
-- **Text Transformer Decoder**: Generates text sequences from visual features, initialized with a pretrained BERT model.
-- **Pretrained Models**: Uses pretrained models for both encoder and decoder, leveraging rich prior knowledge in visual and textual domains.
+## Local Installation
 
-#### Training and Evaluation
-- **Hyperparameter Optimization**: Selection through empirical experimentation and Bayesian optimization.
-- **Model Calibration**: Utilizes margin loss and other techniques to align sequence likelihoods with quality, improving output accuracy.
-- **Evaluation Metrics**: Performance evaluated using CER, WER, and BLEU scores.
+Python `3.10` is a safe choice because the Dockerfile uses `python:3.10-slim`.
 
-For a detailed walkthrough of the project's development, challenges, and solutions, read the complete blog post [here](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [here](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition).
-
-## Installation
-
-Ensure you have Python 3.x and the necessary packages installed. You can install the required packages using the following command:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
-## App Usage
-This tool is designed to make document digitization easier by allowing interactive control over processing and real-time feedback on the results.
-This tool allows you to process PDF documents with advanced image processing techniques like line segmentation, deskewing, border removal, and OCR (Optical Character Recognition). Using the CRAFT model, the tool identifies text regions and provides OCR on the segmented lines. You can interactively adjust parameters and view the results, including bounding boxes around detected text.
 
-### Features:
-- **Line Segmentation**: Automatically detects text regions and draws bounding boxes around them.
-- **Deskewing**: Corrects skewed text in the document for better recognition.
-- **Border Removal**: Removes borders to clean up images.
-- **OCR**: Extracts text from segmented regions using the TrOCR model.
-- **Interactive Sliders**: Adjust parameters like padding, noise threshold, and text region width.
-- **PDF Page Navigation**: Easily navigate between pages and save processed images.
+Notes:
 
-### Running the Streamlit Application
-To start the application:
-1. Navigate to the project directory:
-   ```bash
-   cd code/app
-   ```
-2. Run the application:
-   ```bash
-   streamlit run app_streamlit.py
-   ```
-  
-### How to Use:
-1. **Select a PDF File**: Click the "Select PDF" button to open a PDF file.
-2. **Adjust Processing Options**: Use the provided checkboxes and sliders to enable features like deskewing, border removal, and line segmentation. You can adjust parameters such as noise threshold, padding, and minimum width of the text region.
-3. **Enable Line Segmentation**: Toggle the "Line Segmentation" option to activate text detection. This will run the CRAFT model to detect text regions and visualize bounding boxes.
-4. **Run OCR**: After line segmentation, click "Run OCR" to extract text from the detected regions. The OCR output is displayed line-by-line.
-5. **Navigate Pages**: Use the "Next PDF Page" and "Previous PDF Page" buttons to move through the document.
-6. **Save Processed Images**: You can save the left or right page as an image with detected bounding boxes.
+- `requirements.txt` does not install PyTorch directly.
+- The Dockerfile installs CPU-only PyTorch separately.
+- For local GPU training, install the PyTorch build that matches your CUDA environment before running training.
 
-This tool is designed to make document digitization easier by allowing interactive control over processing and real-time feedback on the results.
+## Required Assets
+
+Large model files are intentionally not committed to git. In the current tracked tree, `models/` and `weights/` only contain `.gitkeep`, so a fresh clone is not fully runnable until assets are added.
+
+### Required downloads
+
+| Component | Description | Destination |
+|---|---|---|
+| Training dataset | Line segments and transcriptions | `data/train/` |
+| OCR model | Fine-tuned TrOCR model | `models/` |
+| Quantized ONNX model | CPU-optimized deployment model | `quantized_model/` |
+| CRAFT weights | Text detection and refinement weights | `weights/` |
+
+### Reference download links
+
+| Component | Link |
+|---|---|
+| Training dataset | [Google Drive](https://drive.google.com/drive/folders/1FX6H3IXh-GyeNFEN2SOBkQy4_m_cQ4DX?usp=sharing) |
+| OCR model | [Google Drive](https://drive.google.com/drive/folders/1NMngL384GpGohOpwm3yxYaYJ_Oe_ikpv?usp=sharing) |
+| Quantized ONNX model | [Google Drive](https://drive.google.com/drive/folders/1uDek2tO4AxSoSXWApRe5D7OkDQS4pGqI?usp=sharing) |
+| `craft_mlt_25k.pth` | [Google Drive](https://drive.google.com/file/d/1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ/view) |
+| `craft_ic15_20k.pth` | [Google Drive](https://drive.google.com/file/d/1i2R7UIUqmkUtF0jv_3MXTqmQ_9wuAnLf/view) |
+| `craft_refiner_CTW1500.pth` | [Google Drive](https://drive.google.com/file/d/1XSaFwBkOaFOdtk4Ane3DFyJGPRw6v5bO/view) |
+
+## Interactive App Usage
+
+The repository contains two closely related Streamlit apps:
+
+- `code/app/app_streamlit.py`: standard app using the local TrOCR model
+- `code/app/qapp.py`: quantized CPU deployment app used by Docker
+
+### App capabilities
+
+- upload a PDF and navigate page by page
+- split wide scanned images into virtual left and right pages
+- adjust DPI, noise threshold, and see-through intensity
+- toggle border removal and deskewing
+- enable line segmentation
+- adjust segmentation parameters such as padding, minimum width, margin, and threshold
+- run OCR on the current page and review line-ordered text output
+
+### App preview
+
+The repository already includes `figs/app.gif` as the built-in visual demo of the interface and workflow.
+
+### Screenshot note
+
+The two screenshots shared in chat are not present as local image files inside this repository, so they cannot be embedded here automatically as static Markdown assets. Once those images are saved into `figs/`, they can be added directly under this section.
+
 ## Usage
 
 ### Data Preparation
-1. **Automated Processing**:
-   ```bash
-   python main.py
-   ```
-   This script automates the entire process of converting PDFs to images, running text detection, and splitting text into line segments. More information can be found in the `code/datautils/` folder.
+
+If you are starting from PDFs rather than ready-made line crops, use the utilities in `code/datautils/`.
+
+Main automation command:
+
+```bash
+cd code/datautils
+python main.py
+```
+
+This stage covers:
+
+- PDF-to-image conversion
+- document cleanup
+- text detection
+- contour extraction
+- line segmentation
+
+Practical note:
+
+- `code/datautils/main.py` uses example paths such as `book_name = "book2"`, so adjust paths and parameters before running it on your own data.
 
 ### Training
 
-To fine-tune the TrOCR model, use the `train.py` script. More information can be found in the `code/` folder. Explore more finetuning strategies under `code/finetuning`.
+Training is configured through `code/config.yaml`.
+
+Important configuration fields include:
+
+- `image_dir`
+- `text_dir`
+- `model_dir`
+- `inf_model_dir`
+- `base_dir`
+- `train_batch_size`
+- `eval_batch_size`
+- `num_train_epochs`
+- `learning_rate`
+- `use_wandb`
+- `model_name`
+
+To train:
 
 ```bash
+cd code
 python train.py
 ```
 
+The training pipeline:
+
+- loads TrOCR from Hugging Face
+- builds a paired image-text dataset
+- splits train and evaluation subsets
+- trains with `Seq2SeqTrainer`
+- computes CER, WER, and BLEU
+- saves the best model and processor
+- runs folder-based inference after training
+
 ### Inference
 
-To perform inference using the fine-tuned model, use the `test.py` script. More information can be found in the `code/` folder.
+To run OCR on folders of segmented line images:
 
 ```bash
+cd code
 python test.py
 ```
 
-## Datasets and Models
+Expected structure:
 
-### Required Downloads for Local Development / Docker Build
+```text
+data/test/
+|-- 2/
+|-- 220/
+`-- 251/
+```
 
-| Component | Description | Download Link | Destination |
-|-----------|-------------|---------------|-------------|
-| Training Dataset | Line segments and transcriptions | [Google Drive](https://drive.google.com/drive/folders/1FX6H3IXh-GyeNFEN2SOBkQy4_m_cQ4DX?usp=sharing) | `data/train/` |
-| OCR Model | Fine-tuned TrOCR model (`printed_large`) | [Google Drive](https://drive.google.com/drive/folders/1NMngL384GpGohOpwm3yxYaYJ_Oe_ikpv?usp=sharing) | `models/` |
-| Quantized ONNX Model | CPU-optimized quantized model for inference | [Google Drive](https://drive.google.com/drive/folders/1uDek2tO4AxSoSXWApRe5D7OkDQS4pGqI?usp=sharing) | `quantized_model/` |
-| CRAFT Weight 1 | `craft_mlt_25k.pth` | [Google Drive](https://drive.google.com/file/d/1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ/view) | `weights/` |
-| CRAFT Weight 2 | `craft_ic15_20k.pth` | [Google Drive](https://drive.google.com/file/d/1i2R7UIUqmkUtF0jv_3MXTqmQ_9wuAnLf/view) | `weights/` |
-| CRAFT Weight 3 | `craft_refiner_CTW1500.pth` | [Google Drive](https://drive.google.com/file/d/1XSaFwBkOaFOdtk4Ane3DFyJGPRw6v5bO/view) | `weights/` |
+Each page folder should contain numbered `.jpg` line segments. The script sorts them numerically, transcribes them in order, and writes `output.txt` into each page folder.
 
-### Setup Instructions
+### Quantization
 
-1. **Download the training dataset** containing two folders `All_line_segments` and `All_line_texts` and extract it into the `data/train/` folder.
+The repository includes ONNX conversion and evaluation scripts under `code/quantization/`.
 
-2. **Download the fine-tuned OCR model** named `printed_large` and extract it into the `models/` folder.
+Export and quantize:
 
-3. **Download the quantized ONNX model** and extract it into the `quantized_model/` folder. This contains:
-   - `encoder_model.onnx`
-   - `decoder_model.onnx`
-   - `decoder_with_past_model.onnx`
-   - `generating_config.json`
-   - `config.json`
+```bash
+cd code/quantization
+python onnx_quat.py
+```
 
-4. **Download all three CRAFT weights** and place them in the `weights/` folder:
-   - `craft_mlt_25k.pth`
-   - `craft_ic15_20k.pth`
-   - `craft_refiner_CTW1500.pth`
- 
+Compare PyTorch and quantized models:
+
+```bash
+cd code/quantization
+python evaluate_quat.py
+```
+
+`evaluate_quat.py` measures:
+
+- inference time
+- CER
+- WER
+- model output similarity
+- storage size difference
+- result visualizations
+
+### Synthetic Data Generation
+
+The folder `code/synthetic_data_generation/VRD-image-text-generator/` contains tools for generating OCR training pairs from text.
+
+Example command:
+
+```bash
+cd code/synthetic_data_generation/VRD-image-text-generator
+python auto_generation.py --input_file your_text_file.txt --font_size 24 --add_random_text True --apply_data_augmentation True
+```
+
+This is useful when expanding training data or experimenting with augmentation-heavy OCR pipelines.
+
 ## Model Performance
 
-| Metric | Value | Accuracy |
-|--------|-------|----------|
-| CER    | 0.019 | 98.1%   |
-| WER    | 0.048 | 95.2% |
+The repository reports the following metrics for the historical OCR model:
 
-BLEU = 0.92
+| Metric | Value | Accuracy |
+|---|---:|---:|
+| CER | 0.019 | 98.1% |
+| WER | 0.048 | 95.2% |
+
+BLEU = `0.92`
+
+## Practical Notes
+
+- Large assets are excluded from git, so setup is not zero-config after cloning.
+- Some scripts use hard-coded example paths and should be reviewed before reuse.
+- The local Streamlit app and the Dockerized quantized app use different model-loading paths.
+- The Dockerfile expects specific TrOCR config/tokenizer files under `models/`.
+- Sample PDFs are available in `data/test_books/` for interface testing.
+- The repository also contains extra notebooks in `code/finetuning/` and sample processed data under `data/train/processed_book/`.
+
 ## Acknowledgements
 
-This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024 and 2025. Detailed documentation and a journey of this project during 2024 can be found in the [blog post 1](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition) & [blag post 2](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition). For 2025 refer [2025 midterm blog](https://utsavrai.substack.com/p/efficient-transformer-based-ocr-for?r=3ypuho), [2025 Finalterm blog](https://open.substack.com/pub/utsavrai/p/containerised-quantised-transformer?utm_campaign=post-expanded-share&utm_medium=web).
+This project is supported by the [HumanAI Foundation](https://humanai.foundation/) and Google Summer of Code 2024 and 2025.
+
+Related write-ups:
+
+- [2024 blog post 1](https://utsavrai.substack.com/p/a-journey-into-historical-text-recognition)
+- [2024 blog post 2](https://utsavrai.substack.com/p/decoding-history-advancing-text-recognition)
+- [2025 midterm blog](https://utsavrai.substack.com/p/efficient-transformer-based-ocr-for?r=3ypuho)
+- [2025 final blog](https://open.substack.com/pub/utsavrai/p/containerised-quantised-transformer?utm_campaign=post-expanded-share&utm_medium=web)
 
 ## License
 
@@ -321,4 +392,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - [Google Summer of Code 2025 Project](https://summerofcode.withgoogle.com/programs/2025/projects/SWLdu59R)
 - [HumanAI Foundation](https://humanai.foundation/)
 
-Feel free to fork the repository and submit pull requests. For major changes, please open an issue to discuss your ideas first. Contributions are always welcome!
