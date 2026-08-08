@@ -37,31 +37,31 @@ def copyStateDict(state_dict):
     return new_state_dict
 
 @st.cache_resource
-def load_craft_model():
-    # Define the path to the pre-trained CRAFT model weights
+def load_craft_model(refine: bool = True):
+     # Define the path to the pre-trained CRAFT model weights
     trained_model_path = '../../weights/craft_mlt_25k.pth'
-    
-    # Initialize the CRAFT model
-    net = CRAFT()     # initialize
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
+
+    # Initialize the CRAFT model
+    net = CRAFT()
+    state_dict = torch.load(trained_model_path, map_location="cpu")
+
     # Load the pre-trained weights
-    net.load_state_dict(copyStateDict(torch.load(trained_model_path, map_location=device)))
-    
+    net.load_state_dict(copyStateDict(state_dict))
     net.to(device)
     net.eval()
-    
-    # Load refiner model if needed
+
+     # Load refiner model if needed
     refine_net = None
-    refine = True  # Set to True if using refine_net
     if refine:
         from refinenet import RefineNet
         refiner_model_path = '../../weights/craft_refiner_CTW1500.pth'  # Update the path
         refine_net = RefineNet()
-        refine_net.load_state_dict(copyStateDict(torch.load(refiner_model_path, map_location=device)))
+        ref_state_dict = torch.load(refiner_model_path, map_location="cpu")
+        refine_net.load_state_dict(copyStateDict(ref_state_dict))
         refine_net.to(device)
         refine_net.eval()
+
     return net, device, refine_net
 
 def test_net(net, image, text_threshold, link_threshold, low_text, *, cuda, poly, device, refine_net=None):
@@ -113,7 +113,8 @@ def load_ocr_model():
     model_path = "../../models"
     processor_path = "../../models"
     processor = TrOCRProcessor.from_pretrained(processor_path)
-    model = VisionEncoderDecoderModel.from_pretrained(model_path).to(device)
+    model = VisionEncoderDecoderModel.from_pretrained(model_path)
+    model.to(device)
     return processor, model, device
 
 processor, model, device = load_ocr_model()
@@ -323,6 +324,7 @@ def process_page(_pdf_document, page_number, dpi, noise_threshold, intensity_thr
     raw_right_half = None
 
     try:
+        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
         page = _pdf_document.load_page(page_number)
         pix = page.get_pixmap(matrix=fitz.Matrix(dpi / 72, dpi / 72), alpha=False)
         image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
@@ -685,7 +687,9 @@ def get_virtual_page(pdf_document, virtual_index, dpi, **kwargs):
 if uploaded_file is not None:
     if 'pdf_document' not in st.session_state or st.session_state['uploaded_file_name'] != uploaded_file.name:
         try:
-            st.session_state['pdf_document'] = fitz.open(stream=uploaded_file.getvalue(), filetype="pdf")
+            pdf_bytes = uploaded_file.getvalue()
+            st.session_state['pdf_bytes'] = pdf_bytes
+            st.session_state['pdf_document'] = fitz.open(stream=pdf_bytes, filetype="pdf")
             st.session_state['uploaded_file_name'] = uploaded_file.name
             st.success(f"PDF loaded: {uploaded_file.name}")
         except Exception as e:
