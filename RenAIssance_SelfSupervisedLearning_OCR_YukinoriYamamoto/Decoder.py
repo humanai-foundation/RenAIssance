@@ -27,11 +27,11 @@ class LSTMAttnDecoder(nn.Module, PyTorchModelHubMixin):
         super(LSTMAttnDecoder, self).__init__()
         self.hidden_size = hidden_size
         self.output_size = output_size
-        self.dropout = dropout
+        self.dropout_rate = dropout
 
         self.embedding = nn.Embedding(output_size, hidden_size)
         # embedding: (output_size, hidden_size)
-        self.dropout = nn.Dropout(self.dropout)
+        self.dropout = nn.Dropout(self.dropout_rate)
         self.attention = Attention(hidden_size)
         self.lstm = nn.LSTM(hidden_size * 2, hidden_size, num_layers=2, bidirectional=True, batch_first=True)
         self.out = nn.Linear(hidden_size * 2, output_size)
@@ -39,6 +39,8 @@ class LSTMAttnDecoder(nn.Module, PyTorchModelHubMixin):
 
     def forward(self, input_step, last_hidden, encoder_outputs):
         # input_step: (batch_size, 1)
+        if (input_step < 0).any() or (input_step >= self.output_size).any():
+            raise ValueError(f"input_step contains indices out of range [0, {self.output_size})")
         embedded = self.embedding(input_step)
         # embedded: (batch_size, 1, hidden_size)
         embedded = self.dropout(embedded)

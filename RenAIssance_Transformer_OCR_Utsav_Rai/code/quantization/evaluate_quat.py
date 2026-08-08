@@ -48,21 +48,18 @@ def calculate_cer(reference, hypothesis):
     edit_distance = Levenshtein.distance(reference, hypothesis)
     return edit_distance / len(reference)
 
-# Function to perform OCR with PyTorch model
-def perform_ocr_pytorch(model, processor, image_path):
-    """Perform OCR on an image using PyTorch model and measure inference time."""
+# Function to perform OCR with Pytorch model
+def perform_ocr(model, processor, image_path, model_type="model"):
+    """Perform OCR on an image and measure inference time."""
     try:
-        # Load image
         image = Image.open(image_path).convert("RGB")
         
-        # Measure inference time
         start_time = time.time()
         inputs = processor(image, return_tensors="pt")
-        with torch.no_grad():
+        with torch.no_grad():  # always use this for inference
             outputs = model.generate(inputs.pixel_values)
         end_time = time.time()
         
-        # Decode output
         predicted_text = processor.batch_decode(outputs, skip_special_tokens=True)[0]
         
         return {
@@ -70,38 +67,8 @@ def perform_ocr_pytorch(model, processor, image_path):
             "inference_time": end_time - start_time
         }
     except Exception as e:
-        print(f"Error processing {image_path} with PyTorch model: {e}")
-        return {
-            "text": "",
-            "inference_time": 0
-        }
-
-# Function to perform OCR with quantized model
-def perform_ocr_quantized(model, processor, image_path):
-    """Perform OCR on an image using quantized model and measure inference time."""
-    try:
-        # Load image
-        image = Image.open(image_path).convert("RGB")
-        
-        # Measure inference time
-        start_time = time.time()
-        inputs = processor(image, return_tensors="pt")
-        outputs = model.generate(inputs.pixel_values)
-        end_time = time.time()
-        
-        # Decode output
-        predicted_text = processor.batch_decode(outputs, skip_special_tokens=True)[0]
-        
-        return {
-            "text": predicted_text,
-            "inference_time": end_time - start_time
-        }
-    except Exception as e:
-        print(f"Error processing {image_path} with quantized model: {e}")
-        return {
-            "text": "",
-            "inference_time": 0
-        }
+        print(f"Error processing {image_path} with {model_type}: {e}")
+        return {"text": "", "inference_time": 0}
 
 # Load ground truth texts
 def load_ground_truth(gt_folder):
