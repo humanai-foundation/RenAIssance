@@ -7,6 +7,7 @@
 * [Theory and Approach](#theory-and-approach)
   * [Data Preprocessing](#data-preprocessing)
   * [Training the model](#training)
+  * [Evaluation Metrics](#evaluation-metrics)
   * [Inference](#inference)
 * [Results](#results)
 * [Useful Links](#links)
@@ -18,6 +19,41 @@
 # <ins>About the Project
 
 **This project aims to develop a hybrid end-to-end Transformer model capable of accurately recognizing text from non-standard Spanish printed sources from the 16th and 17th centuries. It was developed as part of the Google Summer of Code (GSoC) initiative.**
+
+---
+## Setup & Run Instructions
+
+### Prerequisites
+- Python 3.9 or higher
+- Git
+- (Optional but recommended) GPU for training
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/humanai-foundation/RenAIssance.git
+cd RenAIssance/RenAIssance_Transformer_OCR_Arsh_Khan
+```
+
+### 2. Create a virtual environment
+```bash
+python -m venv venv
+activate the environment :
+Windows
+venv\Scripts\activate
+
+Linux/macOS
+source venv/bin/activate
+```
+
+
+### 3.Install Dependencies
+pip install -r requirements.txt
+
+### 4. Run the notebook
+jupyter notebook ViT_Transformer_Model.ipynb
+
+
+---
 
 ---
 # <ins> Printing Irregularities
@@ -104,7 +140,8 @@ The training process involves several key components to ensure the model effecti
    - Monitors the model’s performance on a validation set and halts training when performance ceases to improve, preventing overfitting and saving computational resources.
 
 6. **Evaluation Metrics**:
-   - The model’s performance is continuously monitored using Character Error Rate (CER), Word Error Rate (WER), and BLEU Score during training to guide adjustments to hyperparameters and strategies.
+- Model performance is evaluated on validation data using Character Error Rate (CER), Word Error Rate (WER), and BLEU Score.
+
 
 7. **Loss Function**:
 Various loss functions have been experimented and implemented to help the model fine-tune across different data distributions, to enhance both its accuracy and generalizability.
@@ -113,6 +150,53 @@ Various loss functions have been experimented and implemented to help the model 
    - **Focal Loss**: Focal Loss is a modification of cross-entropy loss designed to address class imbalance by focusing more on hard-to-classify examples. It introduces a scaling factor, where pt is the predicted probability of the true class and γ is a tunable parameter (called the focusing parameter). This factor down-weights the contribution of easily classified examples, allowing the model to focus more on difficult or misclassified instances.
 
 By following this detailed preprocessing and training strategy, the Transformer OCR model is designed to achieve high accuracy and robust performance in recognizing complex historical Spanish texts.
+
+---
+
+## Evaluation Metrics
+
+The OCR model is evaluated using standard edit-distance–based and sequence-level metrics.
+
+### Character Error Rate (CER)
+
+\[
+\text{CER} = \frac{S + D + I}{N}
+\]
+
+Where:
+- **S**: Substitutions
+- **D**: Deletions
+- **I**: Insertions
+- **N**: Number of characters in the reference text
+
+### Word Error Rate (WER)
+
+\[
+\text{WER} = \frac{S + D + I}{N}
+\]
+
+Where:
+- **S**: Substituted words
+- **D**: Deleted words
+- **I**: Inserted words
+- **N**: Number of words in the reference text
+
+### BLEU Score
+
+BLEU (Bilingual Evaluation Understudy) is used as a sequence-level metric to measure n-gram overlap between predicted text and ground-truth text. In this project, **sentence-level BLEU scores are computed and averaged across samples**.
+
+### Implementation
+
+- **CER and WER** are computed using the Hugging Face `evaluate` library:
+```python
+from evaluate import load
+cer_metric = load("cer")
+wer_metric = load("wer")
+```
+- **BLEU Score** is computed using the NLTK library:
+```python
+from nltk.translate.bleu_score import sentence_bleu
+```
 
 ## Model Calibration
 Several Heuristics such as **label smoothing, beam search decoding, length normalization, and trigram blocking** have been implemented. However, these methods fall short as they are based on indirect supervision, influencing predictions without explicitly optimising the model for accurate probability distributions, leaving the problem of uncalibrated sequence likelihood unresolved.
@@ -149,7 +233,9 @@ Inference is the final stage where the trained model is used to recognize text f
    - **Dictionary and Grammar Checks**: Utilizes dictionaries and grammar rules specific to the historical context to correct spelling and grammatical errors.
 
 4. **Performance Metrics**:
-   - The quality of the model’s output during inference is evaluated using Character Error Rate (CER), Word Error Rate (WER), and BLEU Score. These metrics provide insight into the accuracy and readability of the transcriptions.
+   - **Performance Metrics**:
+- Character Error Rate (CER), Word Error Rate (WER), and BLEU Score are computed to evaluate inference outputs by comparing predicted transcriptions with ground-truth text.
+ These metrics provide insight into the accuracy and readability of the transcriptions.
    - Levenshtein Distance, may also be used to quantify the dissimilarity between the predicted and ground truth text strings, providing another measure of transcription accuracy.
 
 5. **Output**:
@@ -169,6 +255,8 @@ The TrOCR model demonstrates significant improvements in OCR performance, especi
 
 - **Character Error Rate (CER):** 0.03 (97% accuracy)
 - **Word Error Rate (WER):** 0.07 (93% accuracy)
+- BLEU Score: Reported as an auxiliary sequence-level metric to assess linguistic similarity between predicted and ground-truth transcriptions.
+
 
 --- 
 ## <ins>Useful Links

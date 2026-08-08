@@ -1,0 +1,33 @@
+# Core
+python>=3.9
+
+# Deep Learning
+torch>=1.12
+torchvision
+transformers>=4.30
+datasets
+evaluate
+
+# Image Processing
+opencv-python
+Pillow
+scikit-image
+albumentations
+
+# OCR / PDF handling
+pymupdf
+python-docx
+
+# NLP Metrics
+jiwer
+nltk
+
+# Data & Math
+numpy
+scipy
+
+# Visualization
+matplotlib
+
+# Utilities
+tqdm
