@@ -1,0 +1,20 @@
+name: renaiss_env
+channels:
+  - pytorch
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pip
+
+  - pip:
+      - huggingface_hub==0.24.2
+      - matplotlib==3.2.2
+      - numpy==1.24.4
+      - opencv-python==4.9.0.80
+      - pandas==1.4.4
+      - Pillow==10.4.0
+      - torchmetrics==1.2.1
+      - --index-url https://download.pytorch.org/whl/cu124
+      - torch==2.4.1+cu124
+      - torchvision==0.19.1+cu124
