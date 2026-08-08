@@ -1,8 +1,33 @@
 # app.py
+import sys
+import os
 import torch
 import torch.backends.cudnn as cudnn
 from collections import OrderedDict
 import tempfile
+
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+CRAFT_DIR = os.path.abspath(os.path.join(APP_DIR, "..", "CRAFT"))
+for path in (APP_DIR, CRAFT_DIR):
+    if os.path.isdir(path) and path not in sys.path:
+        sys.path.insert(0, path)
+
+
+def resolve_existing_path(env_var, *candidates):
+    override = os.getenv(env_var)
+    if override:
+        return override
+
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+
+    raise FileNotFoundError(
+        f"Could not resolve a path for {env_var or 'required asset'}. "
+        f"Tried: {', '.join(candidates)}"
+    )
+
+
 # Import CRAFT model and utilities
 from craft import CRAFT
 import craft_utils
@@ -12,7 +37,6 @@ import fitz  # PyMuPDF
 from PIL import Image, ImageEnhance
 import cv2
 import numpy as np
-import os
 import math
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 import streamlit as st
@@ -36,7 +60,11 @@ def copyStateDict(state_dict):
 @st.cache_resource
 def load_craft_model():
     # Define the path to the pre-trained CRAFT model weights
-    trained_model_path = 'weights/craft_mlt_25k.pth'
+    trained_model_path = resolve_existing_path(
+        "RENAISSANCE_CRAFT_MODEL_PATH",
+        os.path.join(APP_DIR, "weights", "craft_mlt_25k.pth"),
+        os.path.abspath(os.path.join(APP_DIR, "..", "..", "weights", "craft_mlt_25k.pth")),
+    )
     
     # Initialize the CRAFT model
     net = CRAFT()     # initialize
@@ -54,7 +82,11 @@ def load_craft_model():
     refine = True  # Set to True if using refine_net
     if refine:
         from refinenet import RefineNet
-        refiner_model_path = 'weights/craft_refiner_CTW1500.pth'  # Update the path
+        refiner_model_path = resolve_existing_path(
+            "RENAISSANCE_CRAFT_REFINER_PATH",
+            os.path.join(APP_DIR, "weights", "craft_refiner_CTW1500.pth"),
+            os.path.abspath(os.path.join(APP_DIR, "..", "..", "weights", "craft_refiner_CTW1500.pth")),
+        )
         refine_net = RefineNet()
         refine_net.load_state_dict(copyStateDict(torch.load(refiner_model_path, map_location=device)))
         refine_net.to(device)
@@ -106,9 +138,17 @@ def test_net(net, image, text_threshold, link_threshold, low_text, *, cuda, poly
 @st.cache_resource
 def load_ocr_model():
     device = "cpu"  # We're using CPU-optimized model
-    # Update paths to point to the quantized model
-    model_path = "basenet/quantized"
-    processor_path = "basenet/ocr_weights"  # Keep using the original processor
+    # Support both the Docker /app layout and the local repo layout.
+    model_path = resolve_existing_path(
+        "RENAISSANCE_QAPP_MODEL_DIR",
+        os.path.join(APP_DIR, "basenet", "quantized"),
+        os.path.abspath(os.path.join(APP_DIR, "..", "..", "quantized_model")),
+    )
+    processor_path = resolve_existing_path(
+        "RENAISSANCE_QAPP_PROCESSOR_DIR",
+        os.path.join(APP_DIR, "basenet", "ocr_weights"),
+        os.path.abspath(os.path.join(APP_DIR, "..", "..", "models")),
+    )
     
     processor = TrOCRProcessor.from_pretrained(processor_path)
     
