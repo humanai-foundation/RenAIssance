@@ -3,7 +3,7 @@ import yaml
 import torch
 import matplotlib.pyplot as plt
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel, Seq2SeqTrainer, Seq2SeqTrainingArguments, EarlyStoppingCallback
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, DataLoader, Subset
 from torch.nn.utils.rnn import pad_sequence
 from datasets import load_metric
 from torch.optim import AdamW
@@ -64,8 +64,9 @@ model.to(device)
 try:
     dataset = SpanishDocumentsDataset(config["image_dir"], config["text_dir"], processor)
     train_size = int(0.9 * len(dataset))
-    eval_size = len(dataset) - train_size
-    train_dataset, eval_dataset = random_split(dataset, [train_size, eval_size])
+    indices = list(range(len(dataset)))
+    train_dataset = Subset(dataset, indices[:train_size])
+    eval_dataset = Subset(dataset, indices[train_size:])
     train_loader = DataLoader(train_dataset, batch_size=config["train_batch_size"], shuffle=True, collate_fn=collate_fn)
     eval_loader = DataLoader(eval_dataset, batch_size=config["eval_batch_size"], collate_fn=collate_fn)
 except Exception as e:

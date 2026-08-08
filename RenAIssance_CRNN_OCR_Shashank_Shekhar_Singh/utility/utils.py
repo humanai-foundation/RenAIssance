@@ -20,24 +20,46 @@ def count_files_in_folder(folder_path, extensions_list):
 
     return file_count
 
+
+
 def pdf_to_images(pdf_path, output_folder):
-    # Open the PDF
-    pdf_document = fitz.open(pdf_path)
+    # Check if PDF file exists
+    if not os.path.isfile(pdf_path):
+        print(f"Error: PDF file '{pdf_path}' does not exist.")
+        return
+    
+    # Check if output folder exists, if not create it
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+        print(f"Created output folder: {output_folder}")
 
-    # Iterate over each page in the PDF
+    try:
+        # Open the PDF
+        pdf_document = fitz.open(pdf_path)
+    except Exception as e:
+        print(f"Error opening PDF: {e}")
+        return
+
+    # Check if PDF has pages
+    if len(pdf_document) == 0:
+        print("Error: PDF has no pages.")
+        pdf_document.close()
+        return
+
+    # Iterate over each page
     for page_number in range(len(pdf_document)):
-        # Get the page
-        page = pdf_document.load_page(page_number)
+        try:
+            page = pdf_document.load_page(page_number)
+            pixmap = page.get_pixmap()
 
-        # Render the page as a Pixmap
-        pixmap = page.get_pixmap()
+            image_path = os.path.join(output_folder, f'page_{page_number + 1}.png')
+            pixmap.save(image_path)
 
-        # Save the Pixmap as a PNG image
-        image_path = os.path.join(output_folder, f'page_{page_number + 1}.png')
-        pixmap.save(image_path)
+        except Exception as e:
+            print(f"Error processing page {page_number + 1}: {e}")
 
-    # Close the PDF
     pdf_document.close()
+    print("Conversion completed successfully.")
 
 def split_and_save_image(image_path, output_folder, last_image_number):
     # Read the image
@@ -170,9 +192,24 @@ def read_nth_line(file_path, n):
     return None
 
 def count_lines_in_file(file_path):
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-        return len(lines)
+    # Check if file exists
+    if not os.path.isfile(file_path):
+        print(f"Error: File '{file_path}' does not exist.")
+        return None
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            line_count = sum(1 for _ in file)  # memory-efficient
+        return line_count
+
+    except PermissionError:
+        print(f"Error: Permission denied for file '{file_path}'.")
+    except UnicodeDecodeError:
+        print(f"Error: Encoding issue while reading '{file_path}'. Try a different encoding.")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+    return None
 
 def process_textfiles(textfile, sorted_BoundBox_folder, output_folder, TEST_SIZE):
     # Initialize textfile counter, starting from 7 because of some garbage information in the beginning
@@ -375,17 +412,34 @@ def rotation_aug(training_data):
                     # Save the rotated image to the output folder
                     rotated_img.save(os.path.join(training_data, new_filename))
 
-# Function to add Gaussian noise to an image
-def add_gaussian_noise(image, mean=0, std=2):
-    gauss = np.random.normal(mean, std, image.shape).astype('uint8')
-    noisy_image = cv2.add(image, gauss)
-    return noisy_image
+def add_gaussian_noise(image, mean=0, std=25, mode="normal"):
+    """
+    mode:
+        - "normal" → standard Gaussian noise (positive + negative)
+        - "black"  → only negative noise (darkening)
+        - "white"  → only positive noise (brightening)
+    """
 
-def add_black_gaussian_noise(image, mean=0, std=25):
-    gauss = np.random.normal(mean, std, image.shape).astype('int16')
-    gauss = np.clip(gauss, -255, 0)  # Ensure noise is negative or zero
-    noisy_image = image.astype('int16') + gauss
-    noisy_image = np.clip(noisy_image, 0, 255).astype('uint8')
+    # Use higher precision to avoid overflow
+    image_int = image.astype(np.int16)
+
+    # Generate noise
+    noise = np.random.normal(mean, std, image.shape)
+
+    # Apply mode constraints
+    if mode == "black":
+        noise = np.clip(noise, -255, 0)
+    elif mode == "white":
+        noise = np.clip(noise, 0, 255)
+    elif mode != "normal":
+        raise ValueError("mode must be 'normal', 'black', or 'white'")
+
+    # Add noise
+    noisy_image = image_int + noise
+
+    # Clip back to valid pixel range
+    noisy_image = np.clip(noisy_image, 0, 255).astype(np.uint8)
+
     return noisy_image
 
 def gaussian_noise_aug(training_data):
@@ -394,7 +448,7 @@ def gaussian_noise_aug(training_data):
         if filename.endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
             img_path = os.path.join(training_data, filename)
             img = cv2.imread(img_path)
-            noisy_img = add_black_gaussian_noise(img)
+            noisy_img = add_gaussian_noise(img,mode='black')
             new_filename = f"{os.path.splitext(filename)[0]}_gauss{os.path.splitext(filename)[1]}"
             output_path = os.path.join(training_data, new_filename)
             cv2.imwrite(output_path, noisy_img)
