@@ -1,0 +1,48 @@
+# ============================================================================
+# RenAIssance — CPU variant, PUBLISHED images (no local build, no NVIDIA GPU)
+#
+#   docker compose -f docker-compose.images.cpu.yml pull
+#   docker compose -f docker-compose.images.cpu.yml up
+#
+# Pulls and runs the published CPU image. The launcher (./run.sh --cpu /
+# run.ps1 on a host without an NVIDIA GPU) selects this file automatically.
+# Standalone (not an overlay) so no GPU device reservation is ever requested.
+# ============================================================================
+
+services:
+  backend:
+    image: saarthakg004/renaissance-backend:latest-cpu
+    container_name: renaissance-backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      STORAGE_ROOT: /app/storage
+    volumes:
+      - storage:/app/storage
+      - paddle_models:/paddle_models
+    ports:
+      - "8000:8000"
+    # No GPU reservation — CPU-only image.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    # The frontend image is variant-agnostic (static bundle + nginx).
+    image: saarthakg004/renaissance-frontend:latest
+    container_name: renaissance-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "5173:8080"
+    restart: unless-stopped
+
+volumes:
+  storage:
+  paddle_models:

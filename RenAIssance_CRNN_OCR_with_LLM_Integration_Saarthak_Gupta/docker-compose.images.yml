@@ -1,0 +1,67 @@
+# ============================================================================
+# RenAIssance — run the PUBLISHED images (no local build)
+#
+#   docker compose -f docker-compose.images.yml pull     # get latest images
+#   docker compose -f docker-compose.images.yml up        # run
+#   docker compose -f docker-compose.images.yml down       # stop
+#
+# Use this on a deployment / self-host host where you just want to pull and
+# run. For local development against your source tree, use docker-compose.yml
+# (which builds from ./backend and ./frontend).
+#
+# The service is intentionally named `backend` so the frontend's nginx can
+# reach it at http://backend:8000 (the bundled nginx.conf proxies /api/ there).
+# Compose handles the network + DNS automatically — no --network-alias needed.
+#
+# GPU: requires NVIDIA driver >= 560 (CUDA 12.6 capable) and the NVIDIA
+# Container Toolkit on the host. See the README.
+# ============================================================================
+
+services:
+  backend:
+    # GPU variant. `:latest` is kept as an alias of `:latest-gpu` for backward
+    # compatibility, but the launcher pins the explicit tag so the variant is
+    # never ambiguous. CPU hosts use docker-compose.images.cpu.yml instead.
+    image: saarthakg004/renaissance-backend:latest-gpu
+    container_name: renaissance-backend
+    # Optional .env (SECRET_KEY, ADMIN_TOKEN, DATABASE_URL overrides). Not
+    # required — Supabase tracking creds are baked in, so compose starts without it.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Pin storage to the mounted named volume regardless of layout.
+      STORAGE_ROOT: /app/storage
+    volumes:
+      - storage:/app/storage
+      - paddle_models:/paddle_models
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    image: saarthakg004/renaissance-frontend:latest
+    container_name: renaissance-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "5173:8080"
+    restart: unless-stopped
+
+volumes:
+  storage:
+  paddle_models:

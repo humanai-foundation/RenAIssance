@@ -1,0 +1,24 @@
+__pycache__
+*.pyc
+*.pyo
+.env
+.git
+.gitignore
+.venv
+venv
+*.md
+Dockerfile
+.dockerignore
+
+# Test + dev scaffolding that never runs inside the container.
+tests/
+*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# NOTE: models/weights/ is intentionally NOT excluded. The recognition code
+# (app/api/recognition.py) resolves models relative to the repo root, so the
+# weights must be present inside the image for CRNN / TrOCR to load. If we
+# later decide to download weights lazily at runtime (same pattern as PaddleX),
+# we can exclude models/weights/ and drop ~1.4 GB from the image.

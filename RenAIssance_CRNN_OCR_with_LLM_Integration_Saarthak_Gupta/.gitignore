@@ -1,0 +1,34 @@
+frontend/node_modules
+frontend/dist
+.env
+__pycache__
+*.pyc
+improvements.txt
+RenAIssanceExperimental
+# Runtime data dir at the repo root ONLY (datasets/transcripts/users.db).
+# Anchored with a leading slash so it does NOT also match the source package
+# backend/app/storage/, which must be committed and shipped in the image.
+/storage/
+# Large model weights — tracked out-of-band, not in git. CI fetches them from
+# Google Drive via gdown at image-build time (see .github/workflows).
+backend/models/weights/
+# Belt-and-suspenders: never commit a weight file from anywhere in the tree,
+# whatever folder it lands in. GitHub rejects files over 100 MB anyway.
+*.safetensors
+*.pt
+*.pth
+*.pdparams
+*.onnx
+*.ckpt
+*.h5
+*.tflite
+.claude
+
+# Local-only authoring artifacts (blog drafts, diagrams) — not app code.
+/assets/
+/blog_*.md
+
+# Test / native-run artifacts
+.pytest_cache/
+backend/.pytest-storage/
+backend/.venv-native/

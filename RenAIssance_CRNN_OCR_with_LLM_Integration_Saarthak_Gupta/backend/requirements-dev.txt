@@ -1,0 +1,5 @@
+# Dev/test-only dependencies (never installed into the runtime image).
+# Install on top of requirements.txt:  pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==8.3.4
+pytest-cov==6.0.0

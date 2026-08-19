@@ -1,0 +1,88 @@
+# ============================================================
+# RenAIssance OCR Backend — Python dependencies
+# Pinned for Python 3.11 + Ubuntu 24.04 + CUDA 12.6
+# ============================================================
+
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.12
+pydantic==2.10.4
+
+# --- HTTP client ---
+httpx==0.28.1
+
+# --- Lightweight user tracking / auth ---
+# DATABASE_URL-driven: SQLite by default (on the storage volume), or any
+# postgresql:// URL (Neon/Supabase) with no code change. psycopg2-binary is
+# only used when a Postgres URL is supplied; it is harmless otherwise.
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+bcrypt==4.2.1
+itsdangerous==2.2.0
+email-validator==2.2.0
+
+# --- AI / OCR providers ---
+google-genai==1.0.0
+protobuf==5.29.2
+
+# --- Document export ---
+python-docx==1.1.2
+reportlab==4.2.5
+
+# --- Image processing ---
+Pillow==11.1.0
+opencv-python-headless==4.10.0.84
+# numpy 1.24.4: satisfies paddlex 3.4 (numpy>=1.24), paddlepaddle-gpu 3.3.0,
+# transformers 4.53 (>=1.17) and opencv-python-headless. Kept at 1.24.4 to
+# avoid a numpy 2.x ABI bump across the pinned native wheels.
+numpy==1.24.4
+
+# --- Utilities ---
+python-dotenv==1.0.1
+psutil==6.1.0
+
+# --- paddlepaddle-gpu runtime deps (installed with --no-deps in Dockerfile) ---
+# These are the non-CUDA runtime deps that paddle 3.3.0 would normally pull
+# transitively. Torch/FastAPI/pydantic already bring filelock, typing_extensions,
+# networkx, numpy, Pillow, protobuf, httpx — the only one missing is opt_einsum.
+opt_einsum==3.3.0
+
+# --- Local recognition + post-processing models (CRNN / TrOCR / Qwen3 LoRA) ---
+torch==2.5.1
+# transformers 4.53.x: needed for the Qwen3 architecture (the fine-tuned
+# Spanish post-processing adapter is Qwen3-4B, added to transformers in 4.51).
+# It requires tokenizers>=0.21,<0.22 — which is why paddleocr is bumped to 3.4
+# below (paddlex 3.0.0 hard-pinned tokenizers==0.19.1; 3.4.x relaxed it to
+# >=0.19, so 0.21 satisfies both). Still supports the same
+# VisionEncoderDecoderModel / TrOCRProcessor APIs the recognition service uses.
+transformers==4.53.3
+tokenizers==0.21.2
+# safetensors must be >=0.6.0 to satisfy paddlepaddle-gpu==3.3.0;
+# transformers 4.53.3 only requires >=0.4.3, so 0.6.x works for both.
+safetensors==0.6.2
+# QLoRA post-processing: base Qwen3-4B loaded 4-bit + LoRA adapter (peft),
+# 4-bit kernels (bitsandbytes, GPU-only), device placement (accelerate).
+peft==0.19.1
+bitsandbytes==0.49.2
+accelerate==1.10.1
+
+# --- PDF parsing ---
+PyMuPDF==1.25.1
+
+# --- Layout-aware GPU detection ---
+# Requires: NVIDIA driver >= 560 (CUDA 12.6) on host, --gpus all on docker run.
+#
+# NOTE: paddlepaddle-gpu is NOT listed here — it is installed as a separate
+# --no-deps step in the Dockerfile. Reason: paddlepaddle-gpu==3.3.0 hard-pins
+# nvidia-nccl-cu12==2.25.1 (among several other nvidia-*-cu12 ==X.Y.Z pins)
+# while no torch release on PyPI pins that exact nccl. Letting pip resolve
+# both packages together is impossible under the modern resolver. Both
+# frameworks bundle their own CUDA user-space libraries under torch/lib/
+# and paddle.libs/ respectively, so the nvidia-*-cu12 site-packages copies
+# are redundant at runtime — installing paddle with --no-deps is safe.
+#
+# Bumped 3.0.0 -> 3.4.0: 3.0.0's paddlex hard-pinned tokenizers==0.19.1, which
+# blocks the transformers 4.53 needed for Qwen3. paddlex 3.4.x relaxes it to
+# tokenizers>=0.19. Runs on the same paddlepaddle-gpu 3.3.0 wheel.
+paddleocr==3.4.0

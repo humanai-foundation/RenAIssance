@@ -1,0 +1,59 @@
+# ============================================================================
+# RenAIssance — CPU variant, LOCAL BUILD (no NVIDIA GPU required)
+#
+#   docker compose -f docker-compose.cpu.yml up --build
+#
+# Use this on Mac (Docker on macOS has no Metal passthrough) or any host
+# without an NVIDIA GPU + Container Toolkit. The launcher (./run.sh --cpu /
+# run.ps1) selects this file automatically. It is a STANDALONE file (not an
+# overlay) on purpose: a `deploy.devices: nvidia` reservation cannot be removed
+# by an override merge, and requesting it on a CPU host makes `compose up` fail.
+#
+# Builds backend with VARIANT=cpu (CPU paddle + CPU torch on an Ubuntu base).
+# To use the Apple GPU on a Mac, run natively instead — see ./run-native.sh.
+# ============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        VARIANT: cpu
+        RUNTIME_BASE: ubuntu:24.04
+    image: renaissance-backend:local-cpu
+    container_name: renaissance-backend
+    env_file:
+      - .env
+    environment:
+      STORAGE_ROOT: /app/storage
+    volumes:
+      - storage:/app/storage
+      - paddle_models:/paddle_models
+    ports:
+      - "8000:8000"
+    # No GPU reservation — this variant runs entirely on CPU.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: renaissance-frontend:local
+    container_name: renaissance-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "5173:8080"
+    restart: unless-stopped
+
+volumes:
+  storage:
+  paddle_models:

@@ -1,0 +1,315 @@
+# ============================================================
+# RenAIssance — Docker Build & Push
+# Builds backend + frontend in parallel
+# Versioning: vX.Y with rollover at .9 (e.g. v3.9 → v4.0)
+# Tags pushed: image:vX.Y and image:latest
+# ============================================================
+
+name: Docker Build & Push
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write   # required to create and push git tags
+
+env:
+  DOCKERHUB_USERNAME: saarthakg004
+  BACKEND_IMAGE:  saarthakg004/renaissance-backend
+  FRONTEND_IMAGE: saarthakg004/renaissance-frontend
+
+jobs:
+  # ── Compute next version (no tag push yet) ─────────────────
+  # The git tag is only created AFTER both images build successfully.
+  # This prevents a failed build from consuming a version number.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+    steps:
+      - name: Checkout (full history + all tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version with rollover
+        id: semver
+        run: |
+          git fetch --tags --force
+
+          # Consider tags that match exactly v<major>.<minor>
+          LATEST=$(git tag --list 'v*' \
+            | grep -E '^v[0-9]+\.[0-9]+$' \
+            | sort -V \
+            | tail -n1)
+
+          if [ -z "$LATEST" ]; then
+            # No version tags yet
+            NEXT="v1.0"
+          else
+            MAJOR=$(echo "$LATEST" | sed -E 's/^v([0-9]+)\.[0-9]+$/\1/')
+            MINOR=$(echo "$LATEST" | sed -E 's/^v[0-9]+\.([0-9]+)$/\1/')
+
+            # Rollover after .9
+            if [ "$MINOR" -ge 9 ]; then
+              NEXT="v$((MAJOR + 1)).0"
+            else
+              NEXT="v${MAJOR}.$((MINOR + 1))"
+            fi
+          fi
+
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Computed next version: $NEXT"
+
+  # ── CPU-safe test suite (gates the image builds) ────────────
+  # Runs on a GPU-less GitHub runner, so it installs the CPU torch wheel and
+  # the CPU paddle wheel — the exact deps the CPU image ships — then runs the
+  # backend pytest suite. Real-GPU paths are covered by backend/tests/smoke_gpu.py
+  # (run manually on a GPU host) and the container-smoke job below.
+  test:
+    runs-on: ubuntu-latest
+    needs: version
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install backend deps (CPU) + test tooling
+        run: |
+          python -m pip install --upgrade pip
+          # CPU torch FIRST so requirements.txt finds it satisfied (no CUDA wheel).
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.5.1
+          pip install -r backend/requirements.txt
+          # CPU paddle (no-deps; runtime deps already provided by requirements.txt).
+          pip install --no-deps \
+            --index-url https://www.paddlepaddle.org.cn/packages/stable/cpu/ \
+            paddlepaddle==3.3.0
+          pip install pytest==8.3.4 pytest-cov==6.0.0
+
+      - name: Run tests
+        run: pytest backend/tests -q
+
+  # ── Build backend (gpu + cpu variants from one Dockerfile) ──
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: [version, test]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: gpu
+            runtime_base: ubuntu:24.04
+          - variant: cpu
+            runtime_base: ubuntu:24.04
+    # Folder ID of the public Google Drive folder containing crnn/ and trocr/.
+    # Anyone-with-the-link access is sufficient for gdown to traverse and
+    # download. If this folder is rotated or made private, replace the ID and
+    # either keep public-with-link access or switch to a service account.
+    env:
+      WEIGHTS_DRIVE_FOLDER_ID: 1NRbCcUhcr5wJOCarBNHRP6jlnLuzDVXC
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # GitHub-hosted runners ship with ~14 GB free after actions/checkout.
+      # The torch + paddle wheel download alone is ~3 GB, the built image is
+      # ~19 GB, and the weights add another ~1.4 GB. Reclaim ~30 GB up front
+      # by purging pre-installed toolchains that this job does not use.
+      - name: Reclaim runner disk
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          df -h /
+
+      # Pull recognition-model weights from Google Drive into the backend
+      # build context so the Dockerfile's `COPY . .` bakes them in at
+      # /app/models/weights/. Weights are gitignored (kept out of the repo
+      # because of GitHub's 100 MB file-size limit), so Drive is the source
+      # of truth — update the folder there and rebuild to ship new weights.
+      - name: Fetch recognition-model weights from Google Drive
+        run: |
+          # gdown 6.x dropped --remaining-ok; its folder downloader is also
+          # capped at 50 files per folder (ours has 2 subfolders, so fine).
+          python3 -m pip install --quiet --upgrade 'gdown>=5.2.0'
+          mkdir -p backend/models/weights
+          # Retry twice on transient 429/5xx — Drive occasionally throttles
+          # anonymous public downloads.
+          for attempt in 1 2 3; do
+            if gdown --folder \
+                "https://drive.google.com/drive/folders/${WEIGHTS_DRIVE_FOLDER_ID}" \
+                -O backend/models/weights; then
+              break
+            fi
+            echo "gdown attempt $attempt failed — retrying in 10s…"
+            sleep 10
+          done
+          echo "Fetched weights:"
+          find backend/models/weights -maxdepth 3 -type f -printf '  %p  %s bytes\n' | head -20
+          # Sanity: at least one .safetensors or .pth must exist, otherwise
+          # we would silently ship an image with an empty weights dir.
+          if ! find backend/models/weights \
+                \( -name '*.safetensors' -o -name '*.pth' -o -name '*.pt' \) \
+                | grep -q .; then
+            echo "::error::No model weights found under backend/models/weights after gdown"
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Tags per variant: always :<ver>-<variant> and :latest-<variant>.
+      # The gpu leg additionally publishes the bare :<ver> / :latest as a
+      # backward-compatible alias (the default variant is gpu).
+      - name: Compute backend tags
+        id: tags
+        run: |
+          V="${{ needs.version.outputs.version }}"
+          VAR="${{ matrix.variant }}"
+          TAGS="${BACKEND_IMAGE}:${V}-${VAR}
+          ${BACKEND_IMAGE}:latest-${VAR}"
+          if [ "$VAR" = "gpu" ]; then
+            TAGS="${TAGS}
+          ${BACKEND_IMAGE}:${V}
+          ${BACKEND_IMAGE}:latest"
+          fi
+          { echo "tags<<EOF"; echo "$TAGS"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+
+      - name: Build & push backend (${{ matrix.variant }})
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          build-args: |
+            VARIANT=${{ matrix.variant }}
+            RUNTIME_BASE=${{ matrix.runtime_base }}
+          tags: ${{ steps.tags.outputs.tags }}
+          # GitHub Actions cache for BuildKit layers (scoped per variant).
+          cache-from: type=gha,scope=backend-${{ matrix.variant }}
+          cache-to:   type=gha,scope=backend-${{ matrix.variant }},mode=max
+          # BuildKit provenance for supply chain security
+          provenance: false
+
+  # ── Build frontend ──────────────────────────────────────────
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: [version, test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ needs.version.outputs.version }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+          cache-from: type=gha,scope=frontend
+          cache-to:   type=gha,scope=frontend,mode=max
+          provenance: false
+
+  # ── Container boot smoke (CPU image) ────────────────────────
+  # GitHub runners have no GPU, so we boot the freshly-published CPU image and
+  # assert /api/health returns 200. This proves the image actually starts end
+  # to end (entrypoint preflight + uvicorn) on a GPU-less host.
+  container-smoke:
+    runs-on: ubuntu-latest
+    needs: [version, build-backend]
+    steps:
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Boot CPU image and probe health
+        run: |
+          IMG="${BACKEND_IMAGE}:${{ needs.version.outputs.version }}-cpu"
+          docker run -d --name rb -p 8000:8000 "$IMG"
+          ok=0
+          for i in $(seq 1 36); do
+            if curl -fsS http://localhost:8000/api/health >/dev/null; then
+              echo "Healthy after ~$((i*5))s"; ok=1; break
+            fi
+            sleep 5
+          done
+          echo "----- container logs (tail) -----"
+          docker logs rb 2>&1 | tail -60 || true
+          docker rm -f rb >/dev/null 2>&1 || true
+          [ "$ok" = "1" ] || { echo "::error::CPU image did not become healthy"; exit 1; }
+
+  # ── Tag + Summary (only runs when builds + smoke succeed) ───
+  # Creating the git tag here ensures a failed build never wastes
+  # a version number — re-running the workflow will recompute the
+  # same version and retry the tag push.
+  summary:
+    runs-on: ubuntu-latest
+    needs: [version, test, build-backend, build-frontend, container-smoke]
+    if: always()
+    steps:
+      - name: Checkout (for tag push)
+        if: needs.build-backend.result == 'success' && needs.build-frontend.result == 'success' && needs.container-smoke.result == 'success'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push version tag
+        if: needs.build-backend.result == 'success' && needs.build-frontend.result == 'success' && needs.container-smoke.result == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --tags --force
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Authenticate remote with token
+          git remote set-url origin \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}"
+
+          # Only push the tag if it does not already exist
+          if git rev-parse "${{ needs.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "Tag ${{ needs.version.outputs.version }} already exists — skipping."
+          else
+            git tag "${{ needs.version.outputs.version }}"
+            git push origin "${{ needs.version.outputs.version }}"
+            echo "Pushed tag ${{ needs.version.outputs.version }}"
+          fi
+
+      - name: Build summary
+        run: |
+          echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version: \`${{ needs.version.outputs.version }}\` (backend tags: \`-gpu\` and \`-cpu\`)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| tests                | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| build-backend (gpu+cpu) | ${{ needs.build-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| build-frontend       | ${{ needs.build-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| container-smoke (cpu)  | ${{ needs.container-smoke.result }} |" >> $GITHUB_STEP_SUMMARY

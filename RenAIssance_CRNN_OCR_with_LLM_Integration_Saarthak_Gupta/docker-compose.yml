@@ -1,0 +1,77 @@
+# ============================================================================
+# RenAIssance — full-stack orchestration
+#
+#   docker compose up --build      # first run / after dependency changes
+#   docker compose up              # subsequent runs
+#   docker compose down            # stop (named volumes are preserved)
+#
+# Topology
+#   frontend (nginx)  : host :5173  ->  container :8080
+#                       reverse-proxies /api/  ->  backend:8000  (same origin,
+#                       so no CORS and no hardcoded backend URL in the bundle)
+#   backend  (FastAPI): host :8000  ->  container :8000  (also exposed directly
+#                       for debugging; the app itself only needs the proxy)
+#
+# GPU: requires NVIDIA driver >= 560, CUDA 12.6 capable, and the NVIDIA
+# Container Toolkit on the host (paddlepaddle-gpu has no CPU fallback in this
+# image). See backend/Dockerfile for details.
+# ============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        VARIANT: gpu
+        # Plain Ubuntu for both variants — torch/paddle bring their own
+        # CUDA user-space libs and the host driver is injected by the NVIDIA
+        # Container Toolkit (see backend/Dockerfile Stage 2 note).
+        RUNTIME_BASE: ubuntu:24.04
+    image: renaissance-backend:local
+    container_name: renaissance-backend
+    # Provider keys and auth secrets come from the repo-root .env at runtime.
+    # .env is gitignored and dockerignored, so nothing is baked into the image.
+    env_file:
+      - .env
+    environment:
+      # Pin the storage root so it always lands on the mounted named volume
+      # regardless of the in-container directory layout.
+      STORAGE_ROOT: /app/storage
+    volumes:
+      - storage:/app/storage          # "My Files": transcripts + datasets
+      - paddle_models:/paddle_models   # lazily-downloaded PaddleOCR weights
+    ports:
+      - "8000:8000"
+    # NVIDIA GPU passthrough (Compose spec device reservation).
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s   # model normalization + first import is slow
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: renaissance-frontend:local
+    container_name: renaissance-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "5173:8080"
+    restart: unless-stopped
+
+volumes:
+  storage:
+  paddle_models:
